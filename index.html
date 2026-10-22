@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Revenue assurance control library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f2f8fa;--fg:#062a3f;--mut:#48657a;--card:#fff;--line:#cadde6;--aq:#0a9fb4;--sand:#e9c98b;--bad:#e0483f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#04141f;--fg:#e6f4f8;--mut:#93b0bd;--card:#0a2434;--line:#173a4f;--aq:#35d0e3;--bad:#ff6b63}}
+:root[data-theme="dark"]{--bg:#04141f;--fg:#e6f4f8;--mut:#93b0bd;--card:#0a2434;--line:#173a4f;--aq:#35d0e3;--bad:#ff6b63}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 16px/1.6 "Source Serif 4",Georgia,serif;overflow-x:hidden}
+h1,h2,h3,h4,button,.sans{font-family:Sora,system-ui,sans-serif}
+button:focus-visible{outline:3px solid var(--aq);outline-offset:3px}
+.hero{background:linear-gradient(180deg,#031425,#06304d);color:#eaf8fc;padding:80px 6vw 50px}
+.wrap{max-width:1150px;margin:0 auto}
+.hero h1{font-weight:800;font-size:clamp(2rem,5.4vw,3.8rem);line-height:1.05;letter-spacing:-.03em;margin:0 0 .35em;animation:rise 1s both}
+.hero p{font-size:1.1rem;color:#bfe3ee;max-width:62ch;animation:rise 1s .15s both}
+@keyframes rise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+.rib{position:relative;display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:40px}
+.rib::before{content:"";position:absolute;left:5%;right:5%;top:30px;height:4px;border-radius:2px;background:repeating-linear-gradient(90deg,#35d0e3 0 18px,transparent 18px 40px);background-size:40px 4px;animation:flow 1s linear infinite;opacity:.7}
+@keyframes flow{to{background-position:40px 0}}
+.rib button{position:relative;z-index:1;background:none;border:0;color:#cfeef7;font:600 .82rem/1.3 Sora,sans-serif;cursor:pointer;padding:0 4px;text-align:center}
+.rib button span{display:grid;place-items:center;width:62px;height:62px;margin:0 auto 10px;border-radius:50%;background:#06304d;border:3px solid #2b6580;font-size:1.3rem;transition:all .3s}
+.rib button em{display:block;font-style:normal;color:#8fc9db;font-weight:400;font-size:.75rem}
+.rib button[aria-pressed=true] span,.rib button:hover span{background:#35d0e3;color:#04202c;border-color:#35d0e3;transform:scale(1.12)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:22px 6vw 6px}
+.bar .wrap{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bar button{padding:7px 15px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--fg);font-size:.82rem;cursor:pointer}
+.bar button[aria-pressed=true]{background:var(--aq);color:#04202c;border-color:var(--aq)}
+.bar span{margin-left:auto;color:var(--mut);font:.82rem Sora,sans-serif}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;padding:16px 6vw 70px;max-width:1280px;margin:0 auto}
+.c{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;cursor:pointer;color:var(--fg);padding:0;transition:transform .25s,border-color .25s}
+.c:hover{transform:translateY(-4px);border-color:var(--aq)}
+.c svg{display:block;width:100%;background:radial-gradient(circle at 50% 0,#0b4a66,#041a2b)}
+.c div{padding:14px 16px 16px}
+.c b{font:600 .78rem Sora,sans-serif;color:var(--aq)}
+.c h3{margin:2px 0 8px;font-size:.98rem;line-height:1.25}
+.c small{display:block;color:var(--mut);font:.76rem/1.35 Sora,sans-serif}
+.pill{display:inline-block;margin-left:8px;padding:1px 9px;border-radius:99px;background:var(--line);color:var(--fg);font:600 .7rem Sora,sans-serif}
+.modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px;background:rgba(2,12,20,.75);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .3s}
+.modal.open{opacity:1;pointer-events:auto}
+.sheet{width:min(920px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--card);border-radius:22px;border:1px solid var(--line);position:relative;transform:translateY(28px) scale(.96);transition:transform .45s cubic-bezier(.2,.9,.25,1.1)}
+.modal.open .sheet{transform:none}
+.sheet svg{display:block;width:100%;background:radial-gradient(circle at 50% 0,#0b4a66,#041a2b)}
+.x{position:absolute;right:12px;top:10px;z-index:3;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#05213a;font-size:1.5rem;cursor:pointer}
+.mt{padding:22px 28px 26px}
+.mt h3{margin:0 0 6px;font-size:1.4rem}
+.mt h4{margin:14px 0 2px;font-size:.85rem;color:var(--aq)}
+.mt p{margin:0}
+.meta{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:6px}
+.nv{display:flex;gap:10px;margin-top:20px}
+.nv button{padding:10px 18px;border-radius:99px;border:1px solid var(--line);background:none;color:var(--fg);cursor:pointer;font-size:.88rem}
+.stp{margin:6px 0 0;padding:0;list-style:none;counter-reset:s}.stp li{counter-increment:s;position:relative;padding:8px 10px 8px 46px;margin:4px 0;border-radius:10px;font-size:.95rem;transition:background .35s,transform .35s}.stp li::before{content:counter(s);position:absolute;left:10px;top:8px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--line);font:600 .78rem Sora,sans-serif;transition:background .35s}.stp li.on{background:color-mix(in srgb,var(--aq) 16%,transparent);transform:translateX(4px)}.stp li.on::before{background:var(--aq);color:#04202c}.ex{border-left:4px solid var(--sand);padding-left:14px}.tk{display:inline-flex;align-items:center;gap:12px;margin-top:22px;padding:8px 18px 8px 8px;border-radius:99px;background:#06304d;border:1px solid #2b6580;font:.85rem Sora,sans-serif;max-width:100%}
+.tk b{background:#ff6b63;color:#fff;border-radius:99px;padding:3px 12px;font-size:.75rem;white-space:nowrap}.tk span{color:#e6f4f8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tk span.in{animation:tki .6s both}
+@keyframes tki{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.hs{display:flex;flex-wrap:wrap;gap:12px 36px;margin-top:30px;font-family:Sora,sans-serif;color:#8fc9db;font-size:.82rem}.hs strong{display:block;font-size:2.2rem;line-height:1;color:#fff;font-weight:800}
+.pill.Daily{background:#35d0e3;color:#04202c}.pill.Weekly{background:#7ee0a8;color:#06301e}.pill.Monthly{background:#f2c14e;color:#352603}.pill.Quarterly{background:#ff9aa8;color:#3a0a14}
+.c{animation:cin .55s both;animation-delay:var(--d,0ms)}@keyframes cin{from{opacity:0;transform:translateY(22px) scale(.96)}to{opacity:1;transform:none}}
+.c[data-cat=N]{border-top:4px solid #35d0e3}.c[data-cat=M]{border-top:4px solid #35d49a}.c[data-cat=B]{border-top:4px solid #f2c14e}.c[data-cat=P]{border-top:4px solid #ff8c42}.c[data-cat=T]{border-top:4px solid #b79cff}
+.c:hover{box-shadow:0 14px 34px -14px var(--aq)}
+.stg{margin:0 0 4px;color:var(--aq);font:600 .8rem Sora,sans-serif}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.chips span{padding:4px 12px;border-radius:99px;background:var(--line);font:.8rem Sora,sans-serif}
+.pgw{height:5px;border-radius:3px;background:var(--line);margin:16px 0 4px;overflow:hidden}#pg{height:100%;width:0;background:linear-gradient(90deg,var(--aq),#35d49a);transition:width 1.2s}
+.fmw{background:linear-gradient(180deg,var(--bg),color-mix(in srgb,var(--aq) 10%,var(--bg)));padding:70px 6vw}
+.fmw h2{font-size:clamp(1.7rem,4vw,2.5rem);margin:0 0 .3em;letter-spacing:-.02em}
+.ln{display:grid;grid-template-columns:150px 1fr;gap:6px 22px;align-items:center;padding:18px 0;border-top:1px solid var(--line)}
+.lh b{font:800 1.3rem Sora,sans-serif;display:block}.lh span{color:var(--mut);font:.8rem Sora,sans-serif}
+.trk{position:relative;height:6px;border-radius:3px;background:var(--line);overflow:hidden}.trk i{position:absolute;top:0;left:-25%;width:25%;height:100%;background:linear-gradient(90deg,transparent,var(--aq));animation:run linear infinite}@keyframes run{to{left:100%}}
+.chs{grid-column:2;display:flex;flex-wrap:wrap;gap:6px}.chs button{padding:5px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:600 .78rem Sora,sans-serif;cursor:pointer;transition:all .2s}.chs button:hover{background:var(--aq);color:#04202c;transform:translateY(-2px)}
+@media(max-width:760px){.ln{grid-template-columns:1fr}.chs{grid-column:1}}
+.th{margin-top:8px;padding:16px;border-radius:16px;background:radial-gradient(circle at 20% 0,#0b4a66,#041a2b);min-height:120px}
+.r{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:6px 0;padding:9px 14px;border-radius:10px;background:rgba(255,255,255,.09);color:#e6f4f8;font:.88rem Sora,sans-serif;opacity:0;transform:translateX(-26px);animation:rin .6s forwards}
+.r span{color:#9fd0df}.r b{margin-left:auto;font-weight:600;text-align:right}.r i{font-style:normal;width:18px;font-weight:800}
+.r.b{background:rgba(255,107,99,.2)}.r.b b,.r.b i{color:#ff9a93}.r.o i{color:#35d49a}
+@keyframes rin{to{opacity:1;transform:none}}
+.cmp{margin-top:12px;color:#e6f4f8;font:.82rem Sora,sans-serif;opacity:0;animation:rin .5s forwards}
+.cmp div{display:grid;grid-template-columns:92px 1fr auto;gap:10px;align-items:center;margin:6px 0}.cmp em{font-style:normal;color:#9fd0df}
+.cmp u{display:block;height:14px;border-radius:7px;width:0;background:#35d0e3;animation:grow 1.1s cubic-bezier(.2,.8,.2,1) forwards}.cmp u.b{background:#ff6b63}
+@keyframes grow{to{width:var(--w)}}
+.gp{margin:8px 0 0;color:#ffb3ad;font-weight:600}
+.stamp{display:inline-block;margin-top:12px;padding:3px 16px;border:3px solid #ff6b63;border-radius:8px;color:#ff6b63;font:800 1rem Sora,sans-serif;opacity:0;transform:rotate(-6deg) scale(2.2);animation:stp .45s forwards}
+@keyframes stp{to{opacity:1;transform:rotate(-6deg) scale(1)}}
+.src{display:flex;gap:12px;align-items:flex-start;margin:8px 0;padding:10px 12px;border-radius:12px;background:var(--line)}
+.src i{position:relative;flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--aq);color:#04202c;font-style:normal;font-weight:800}
+.src i::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--aq);animation:pr 2s ease-out infinite}@keyframes pr{from{transform:scale(1);opacity:.8}to{transform:scale(1.9);opacity:0}}
+.src b{display:block;font:600 .9rem Sora,sans-serif}.src span{font-size:.9rem;color:var(--mut)}
+@media(prefers-reduced-motion:reduce){.r,.stamp,.cmp{opacity:1!important;transform:none!important}.cmp u{width:var(--w)!important}}
+.rkw{padding:70px 6vw;background:var(--bg)}.rkw h2{font-size:clamp(1.7rem,4vw,2.5rem);margin:0 0 .3em;letter-spacing:-.02em}
+.rf{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}.rf button{padding:7px 15px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--fg);font-size:.82rem;cursor:pointer}.rf button[aria-pressed=true]{background:var(--aq);color:#04202c;border-color:var(--aq)}.rf span{margin-left:auto;color:var(--mut);font:.82rem Sora,sans-serif;align-self:center}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.H{--c:#e0483f}.M{--c:#f2a33a}.L{--c:#35d49a}
+.rc{position:relative;text-align:left;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:14px;padding:16px 18px;color:var(--fg);cursor:pointer;animation:cin .5s both;animation-delay:var(--d,0ms);transition:transform .25s,box-shadow .25s}
+.rc:hover{transform:translateY(-3px);box-shadow:0 12px 30px -14px var(--c)}
+.rc b{font:600 .78rem Sora,sans-serif;color:var(--c)}.rc h3{margin:3px 0 6px;font-size:.98rem;line-height:1.25;padding-right:18px}.rc p{margin:0 0 8px;font-size:.88rem;color:var(--mut);line-height:1.4}.rc small{font:600 .75rem Sora,sans-serif;color:var(--aq)}
+.drip{position:absolute;right:16px;top:14px;width:9px;height:13px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:var(--c);animation:dd var(--s,2s) ease-in infinite}.H .drip{--s:1.1s}.M .drip{--s:2s}.L .drip{--s:3.2s}
+@keyframes dd{0%{transform:translateY(-4px);opacity:0}20%{opacity:1}100%{transform:translateY(22px);opacity:0}}
+.gz{display:flex;gap:4px;align-items:center}.gz i{width:30px;height:9px;border-radius:5px;background:var(--line);transform-origin:left}.gz i.on{background:var(--c);animation:gz .7s both}.gz i:nth-child(2){animation-delay:.25s!important}.gz i:nth-child(3){animation-delay:.5s!important}@keyframes gz{from{transform:scaleX(0)}to{transform:none}}
+.rkh{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.rkh b{font:700 .85rem Sora,sans-serif;color:var(--c)}
+#rkp{border-left:5px solid var(--c);padding:4px 0 14px 18px;margin-bottom:12px}#rkp svg{width:100%;background:none;margin:10px 0 4px}
+.warn{margin:12px 0 0;padding:10px 14px;border-radius:12px;background:color-mix(in srgb,#f2b24c 22%,transparent);border:1px solid #f2b24c;font-size:.92rem;position:relative;animation:wp 2.4s infinite}.warn::before{content:"Review note · ";font:700 .8rem Sora,sans-serif}@keyframes wp{50%{box-shadow:0 0 0 5px rgba(242,178,76,.25)}}
+.mr button{padding:4px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:600 .78rem Sora,sans-serif;cursor:pointer}.mr button:hover{background:var(--aq);color:#04202c}
+.blink{animation:blink 1.1s infinite}@keyframes blink{50%{opacity:.25}}
+.note{max-width:1150px;margin:0 auto;padding:0 6vw 50px;color:var(--mut);font-size:.85rem}
+@media(max-width:760px){.rib{grid-template-columns:repeat(3,1fr);row-gap:18px}.rib::before{display:none}.meta{grid-template-columns:1fr}.bar span{margin-left:0;width:100%}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <h1>Revenue assurance risks and controls</h1>
+  <p>71 risks and the 46 detective controls that catch them, following a customer’s money from the first connection request to the final payment. Open a control to watch the check run, or jump to <a href="#risks" style="color:#e9c98b">the risk library</a> to see how each risk leaks revenue.</p>
+  <div class="tk"><b>Just caught</b><span id="tkt"></span></div>
+  <div class="rib" id="rib"></div>
+  <div class="hs" id="hs"></div>
+</div></header>
+<div class="bar"><div class="wrap" id="fq"></div></div>
+<main class="grid" id="grid"></main>
+<section class="fmw" id="fm"><div class="wrap"><h2>Frequency map</h2><p>How often each control runs, taken from the control definitions. The light moves at each control’s cadence. Select an ID to open it.</p><div id="lanes"></div></div></section>
+<section class="rkw" id="risks"><div class="wrap"><h2>Risk library</h2><p>71 risks from the risk and control matrix. The dripping drop is faster the more severe the risk. Open a risk to see where in the process it leaks and which control catches it.</p><div class="rf" id="rf"></div><div class="rgrid" id="rg"></div></div></section>
+<p class="note">Risks and their review notes come from the risk and control matrix; where a note flags a conflict (for example the 10, 15 and 25-day timelines), please confirm the right figure before relying on it. Each animation shows the systems the control reads from, the check it performs, and the exceptions it hands to the owning team. Open any control for its numbered steps, animated one by one, and a worked example. Examples marked illustrative use made-up numbers. Fee and threshold values (such as 150% high usage, SAR 200 tanker registration or 90 days quotation expiry) are shown only where they define the check.</p>
+
+<div class="modal" id="md" aria-hidden="true"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mh">
+  <button class="x" id="mx" aria-label="Close">×</button>
+  <svg id="msv" viewBox="0 0 900 290" style="max-height:300px" role="img" aria-label="Animated flow of the control"></svg>
+  <div class="mt"><div id="rkp" hidden><div class="rkh"><b id="rkid"></b><div class="gz" id="gz"></div></div><h3 id="rkn"></h3><svg id="rkv" viewBox="0 0 700 80" aria-hidden="true"></svg><p id="rki"></p><div class="warn" id="rkw" hidden></div></div><p class="stg" id="stg"></p><h3 id="mh"></h3><p id="mc"></p>
+    <div class="meta"><div><h4>Frequency</h4><p id="mf"></p></div><div><h4>Control owner</h4><div class="chips" id="mo"></div></div><div><h4>Control type</h4><p>Detective</p></div></div>
+    <div class="warn" id="cn" hidden></div><h4>Risks this control addresses</h4><div class="chips mr" id="mr"></div><div class="pgw"><div id="pg"></div></div><h4>How the check runs</h4><ol class="stp" id="sl"></ol><h4>Example in motion</h4><div class="th" id="th"></div><h4>The same example in words</h4><p class="ex" id="ex"></p><h4>Data sources explained</h4><div id="ms"></div>
+    <div class="nv"><button id="mp">Previous</button><button id="mn">Next</button></div></div>
+</div></div>
+
+<script>
+function $(s){return document.querySelector(s)}
+var CATS={N:["◧","New connections"],M:["◉","Meters and water balance"],B:["▤","Billing"],P:["₪","Payments and collection"],T:["⛟","Tankers and other revenue"]};
+var D=("C.01|Validation of new connections with previous outstanding amounts|N|rule|Daily|Customer Service|C2M case IDs;C2M person IDs;C2M outstanding|Flags new connection cases created or closed while the customer still owes NWC.|Connection given with dues\n"+
+"C.02|Customer segmentation validation|N|doc|Weekly|Customer Service|WFM closed cases;C2M scanned documents|Samples closed cases and checks the submitted documents support the customer segment.|Wrong segment\n"+
+"C.03|Customer request status SLA monitoring|N|sla|Daily|Customer Service; House Connection|C2M orders;C2M case logs;C2M notifications|Checks the quotation and SMS go out within 5 working days, and sizes the opportunity lost on delayed cases.|SLA breach\n"+
+"C.05|Quotation accuracy validation|N|rule|Weekly|House Connection|C2M quotation data;C2M meter and property;Charging details|Recomputes the connection fee from service, customer type, building area and units, then adds 15% VAT.|Wrong fee\n"+
+"C.06|Connection payment reminder validation|N|sla|Weekly|Billing|C2M quotations;C2M reminders;C2M quotation status|Checks payment reminders are sent within 90 days and that quotations expire afterwards.|Reminder missed\n"+
+"C.07|Work order generation and payment validation|N|seq|Weekly|House Connection|WFM work orders;SADAD payments in C2M|Work orders should follow payment: none after paying, one before paying, or one without any payment.|Work order out of order\n"+
+"C.08|Service agreement activation validation|N|rec|Daily|House Connection|WFM work orders;C2M service agreements;AMR consumption|Closed work orders must have an active service agreement, and pending-start agreements should show no consumption.|Agreement not active\n"+
+"C.09|Connection fee vs. contractor cost analysis|N|rule|Monthly|House Connection|C2M fee payments;WFM closed work orders;ERP contractor payments|Compares connection fee revenue with estimated contractor cost so margins stay positive.|Negative margin\n"+
+"C.11|Connection disconnection validation|N|seq|Daily|House Connection|C2M expired quotations;WFM field activity;AMR consumption|For expired wastewater quotations, checks the meter was switched off and no unauthorised consumption follows.|Unauthorised use\n"+
+"C.12|AMR vs. C2M meter validation|M|rec|Daily|Reading team; Billing team|AMR meter list;C2M meter list|Reconciles meters across both systems: active or inactive mismatches, missing meters and smart flag differences.|Meter mismatch\n"+
+"C.13|AMR vs. MDM vs. C2M validation|M|rec|Daily|Reading team; Billing team|AMR consumption;MDM consumption;C2M consumption|Compares meters and readings across three systems, and spots gaps when fixed gateways are down.|Missing readings\n"+
+"C.14|Manual reading validation|M|sla|Daily|Reading team|AMR no-consumption list;Mobility readings;C2M reading cycle|Meters needing manual reads must have a reading in C2M by the end of the cycle.|Reading not received\n"+
+"C.15|Bulk meters AMR vs. C2M validation|M|rec|Monthly|Smart Operations; Billing team|AMR bulk meters;C2M accounts|Key account, internal and SWCC meter tags in AMR must agree with the accounts created in C2M.|Wrong account type\n"+
+"C.16|Zero consumption monitoring|M|trend|Weekly|Reading team; Billing team|AMR consumption;C2M accounts;TMS tanker orders|Finds accounts with zero use, checks tanker ordering and whether teams acted on long zero periods.|No action on zero use\n"+
+"C.17|Low consumption monitoring|M|trend|Weekly|Reading team; Billing team|AMR consumption;C2M accounts;TMS tanker orders|Flags use below daily limits (residential 0.5, commercial 1.3, government 2.3 m³) and checks follow-up.|No action on low use\n"+
+"C.18|Meter alarm monitoring|M|rule|Daily|Operations team|MDM alarms;C2M accounts and charges;WFM field activity|Alarms such as backflow and low battery need a field activity, and no-fault checks must not be charged.|Alarm without action\n"+
+"C.55|NRW monitoring|M|trend|Monthly|NRW team|WPS production report;C2M billed volume|Compares water supplied with water billed to show the non-revenue water percentage.|NRW above target\n"+
+"C.10|Core revenue recording validation|B|rec|Monthly|Account Receivable Team|C2M revenue streams;GL trial balance|Matches each revenue stream in C2M to the correct 4XXXXX GL account.|GL mismatch\n"+
+"C.19|Block bills monitoring|B|age|Monthly|Billing team|C2M block bills;Billing dump|Follows block bills, repeat offenders and bills not cleared six months after consumption.|Block bill not cleared\n"+
+"C.20|Billing and reading cycle assignment|B|rec|Monthly|Billing team|C2M customer data;Bill cycle master|Every billable account needs reading and billing cycles that match its area.|Missing or wrong cycle\n"+
+"C.21|Billable vs. billed validation|B|rec|Monthly|Billing team|C2M service agreements;C2M billing dump|Every active service agreement must be invoiced, and zero-amount invoices are flagged.|Bill not generated\n"+
+"C.22|Charging validation|B|rule|Monthly|Billing team|C2M billing dump;Tariff master|Recomputes meter fees, tiered water and wastewater rates and fixed consumption against the tariff.|Wrong charge\n"+
+"C.23|C2M vs. SADAD validation (bill upload)|B|rec|Monthly|Billing team|C2M billing dump;SADAD portal report|Count and amount of bills generated in C2M must equal bills uploaded for payment.|Upload mismatch\n"+
+"C.24|High usage notification validation|B|rule|Daily|Billing team|AMR readings;C2M alerts;C2M credit limits|Checks a high usage alert is sent when use passes 150% of the six-month average.|Alert not sent\n"+
+"C.25|Estimated bill validation|B|rule|Monthly|Billing team|C2M billing dump;MDM consumption;Estimation matrix|Estimates must not be used when readings exist, nor repeat more than twice in six months.|Wrong estimate\n"+
+"C.26|Bill delivery validation|B|rec|Monthly|Billing team|C2M billing dump;C2M delivery report|Every generated bill needs a delivered status.|Bill not delivered\n"+
+"C.28|Billing adjustment monitoring|B|doc|Weekly|Customer Support|C2M adjustments;Approval records;Authority matrix|Samples adjustments and checks reasons, approval level and amounts against the authority matrix.|Unapproved adjustment\n"+
+"C.29|Final invoice validation|B|rec|Monthly|Billing team|C2M final invoices|Final invoice dates must match the service agreement disconnection date.|Date mismatch\n"+
+"C.27|SADAD vs. billing validation (payment check)|P|rec|Weekly|Billing team|SADAD and gateways;C2M billing|Payments received through portals must be posted in the billing system.|Missing payment\n"+
+"C.30|Reconnection validation|P|seq|Weekly|Collection team|C2M outstanding;C2M payments;AMR readings;C2M billing|A meter should be switched on only after dues clear and the reconnection fee is charged.|Reconnected without payment\n"+
+"C.31|Payment instalment validation|P|rule|Monthly|Collection team|C2M instalments;Instalment policy|Checks instalment rules: invoice over SAR 1,000, at least SAR 200 a month, up to 36 months, one scheme, no dispute.|Policy breach\n"+
+"C.32|Dunning validation|P|seq|Weekly|Collection team|C2M SMS alerts;WFM disconnection orders;AMR consumption|Two warnings, a disconnection work order, and no consumption after disconnection.|Dunning step skipped\n"+
+"C.33|Outstanding ageing monitoring|P|age|Daily|Collection team|ERP receivables;C2M outstanding|Lists the top balances older than 90 days and checks collection actions taken.|Old balance, no action\n"+
+"C.35|Water tanker request validation|T|rule|Weekly|Tanker station team|TMS requests;C2M outstanding;Network coverage report|No tanker for customers with over three months of dues or inside network coverage.|Request wrongly served\n"+
+"C.36|Non-core revenue outstanding monitoring|T|age|Quarterly|TSE, tanker, shared services, rental, project, O&M teams|ERP unsettled invoices;C2M outstanding|Tracks ageing on tanker, TSE, rental and project invoices against agreement due dates.|Overdue invoice\n"+
+"C.37|Tanker station charging validation|T|trend|Monthly|Tanker station team; Billing team|AMR consumption;C2M contractor billing|Trends station consumption, compares AMR with tanker capacity, and checks invoice equals consumption times rate.|Consumption mismatch\n"+
+"C.38|Water tanker quality fee validation|T|rule|Monthly|Tanker station team|TMS active tankers;LIMS charges|Each active tanker should be charged SAR 1,162 including VAT for water testing.|Fee not charged\n"+
+"C.39|Water tanker registration fee and revenue recording|T|rule|Monthly|Tanker station team|TMS registered tankers;ERP invoices;GL report|Registration fee of SAR 200 per tanker must be invoiced and booked in the right GL.|Fee or GL mismatch\n"+
+"C.40|Waste water tanker entry fee validation|T|rec|Daily|Shared services (HQ)|ELM entry data;Tanker wallet statement|Every recorded tanker entry must deduct the right fee (SAR 15.25 or 26 by cluster) from the wallet.|Entry not charged\n"+
+"C.41|Waste water tanker entry fee revenue share|T|rec|Monthly|Account Receivable Team|ELM wallet report;Revenue share calculation;ERP invoices;GL data|Recalculates NWC’s share by year slab and checks the invoice and GL entry.|Share mismatch\n"+
+"C.42|Waste water tanker registration fee and revenue|T|rule|Monthly|Shared services; Account Receivable Team|ELM tanker report;GL report|Registration fee of SAR 200 per tanker and NWC’s share must reach the right GL.|Fee or GL mismatch\n"+
+"C.44|Water sample testing service charge validation|T|rule|Weekly|Water testing team|LIMS invoices;Water testing price list|Rates on testing invoices must match the approved price list by test type.|Wrong rate\n"+
+"C.45|Water sample testing payment validation|T|rec|Monthly|Account Receivable Team|LIMS closed orders;ERP receipts|Closed testing orders must have a matching payment receipt in ERP.|Unpaid invoice\n"+
+"C.46|Water sample testing revenue recording|T|rec|Monthly|Account Receivable Team|LIMS invoices;GL revenue|Testing revenue in LIMS must equal revenue booked in the right GL account.|GL mismatch\n"+
+"C.49|Contractor penalty revenue recording|T|rec|Quarterly|Account Receivable Team|ERP penalty invoices;GL report|Penalty invoices on contractors must be booked completely in the penalty GL accounts.|GL mismatch\n"+
+"C.54|Zamzam revenue recording validation|T|rec|Monthly|Account Receivable Team|Zamzam stock movement;Customer invoices;GL report|Bottles sold from stock must match invoices, the SAR 0.01 per bottle share, and the GL entry.|Bottles not invoiced").split("\n").map(function(l){var a=l.split("|");return{id:a[0],n:a[1],c:a[2],p:a[3],f:a[4],o:a[5],s:a[6].split(";"),k:a[7],e:a[8]}});
+
+/* relatable scenes, drawn inside x250-650, y30-260 */
+var BG='<rect x="250" y="30" width="400" height="230" rx="16" fill="#082a40" stroke="#2b6580" stroke-width="2"/>';
+var NS='<animateTransform attributeName="transform" type="rotate" values="-60 0 -4;60 0 -4;-60 0 -4" dur="3s" repeatCount="indefinite"/>',NF='<animateTransform attributeName="transform" type="rotate" values="-72 0 -4;-66 0 -4;-72 0 -4" dur="3s" repeatCount="indefinite"/>',NL='<animateTransform attributeName="transform" type="rotate" values="-60 0 -4;-40 0 -4;-60 0 -4" dur="3s" repeatCount="indefinite"/>';
+var I={house:function(c){c=c||"#e6f4f8";return'<path d="M-26 6L0-22L26 6" fill="none" stroke="'+c+'" stroke-width="4" stroke-linejoin="round"/><rect x="-18" y="6" width="36" height="26" fill="'+c+'"/><rect x="-5" y="16" width="10" height="16" fill="#082a40"/>'},
+meter:function(n,c){return'<rect x="-24" y="-26" width="48" height="52" rx="10" fill="'+(c||"#9bb3c2")+'"/><circle cy="-4" r="17" fill="#fff"/><line y1="-4" y2="-18" stroke="#e0483f" stroke-width="3" stroke-linecap="round">'+(n||"")+'</line><rect x="-14" y="16" width="28" height="6" rx="2" fill="#4a6a7c"/>'},
+coin:function(){return'<circle r="11" fill="#f2c14e" stroke="#a97b16" stroke-width="2"/><rect x="-1.5" y="-6" width="3" height="12" fill="#a97b16"/>'},
+doc:function(c){return'<rect x="-17" y="-22" width="34" height="44" rx="4" fill="'+(c||"#fff")+'"/><g fill="#7a97a8"><rect x="-10" y="-13" width="20" height="3"/><rect x="-10" y="-5" width="20" height="3"/><rect x="-10" y="3" width="13" height="3"/></g>'},
+truck:function(c){return'<rect x="-34" y="-16" width="44" height="26" rx="8" fill="'+(c||"#2e9bff")+'"/><path d="M12-6h14l8 10v8H12z" fill="#e6f4f8"/><circle cx="-18" cy="14" r="7" fill="#223"/><circle cx="22" cy="14" r="7" fill="#223"/>'},
+bell:function(){return'<path d="M-14 8Q-14-14 0-16Q14-14 14 8Z" fill="#f2c14e"/><rect x="-18" y="8" width="36" height="4" rx="2" fill="#f2c14e"/><circle cy="16" r="4" fill="#f2c14e"/>'},
+sms:function(c){return'<rect x="-22" y="-16" width="44" height="30" rx="9" fill="'+(c||"#35d0e3")+'"/><path d="M-8 14L-14 24L2 14Z" fill="'+(c||"#35d0e3")+'"/><g fill="#04202c"><circle cx="-10" cy="-1" r="3"/><circle cy="-1" r="3"/><circle cx="10" cy="-1" r="3"/></g>'},
+flask:function(c){return'<path d="M-8-22h16v14l14 26a6 6 0 0 1-5 9h-34a6 6 0 0 1-5-9l14-26z" fill="#e6f4f8" opacity=".9"/><path d="M-14 6h28l8 14a4 4 0 0 1-4 6h-36a4 4 0 0 1-4-6z" fill="'+(c||"#35d0e3")+'"/>'},
+bottle:function(){return'<rect x="-6" y="-24" width="12" height="10" fill="#e6f4f8"/><rect x="-12" y="-14" width="24" height="38" rx="8" fill="#7fe3f2"/>'},
+clock:function(){return'<circle r="22" fill="#0b4a66" stroke="#35d0e3" stroke-width="3"/><line y2="-14" stroke="#fff" stroke-width="3" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" values="0;360" dur="4s" repeatCount="indefinite"/></line><circle r="3" fill="#fff"/>'},
+lock:function(c){return'<rect x="-16" y="-4" width="32" height="26" rx="5" fill="'+(c||"#f2c14e")+'"/><path d="M-9-4v-8a9 9 0 0 1 18 0v8" fill="none" stroke="'+(c||"#f2c14e")+'" stroke-width="5"/>'},
+cloud:function(){return'<path d="M-26 12a12 12 0 0 1 4-23a16 16 0 0 1 30-4a14 14 0 0 1 14 27z" fill="#35d0e3"/>'},
+db:function(c){return'<ellipse cy="-16" rx="20" ry="7" fill="'+(c||"#35d0e3")+'"/><path d="M-20-16v32a20 7 0 0 0 40 0v-32" fill="'+(c||"#2b8fa0")+'"/>'},
+person:function(){return'<circle cy="-14" r="8" fill="#e6f4f8"/><path d="M-14 22v-12a14 14 0 0 1 28 0v12z" fill="#e6f4f8"/>'},
+drop:function(c){return'<path d="M0-12C10 2 10 10 0 10C-10 10-10 2 0-12Z" fill="'+(c||"#2e9bff")+'"/>'}};
+function U(n,x,y,s,a,b){return'<g transform="translate('+x+','+y+') scale('+(s||1)+')">'+I[n](a,b)+'</g>'}
+function T(g,a,b,d,bg){var v=b?a+";"+b:a;return'<g><animateTransform attributeName="transform" type="translate" values="'+v+'" dur="'+d+'s" begin="'+(bg||0)+'s" repeatCount="indefinite"/>'+g+'</g>'}
+function FD(g,d,bg){return'<g opacity="0"><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.12;.88;1" dur="'+d+'s" begin="'+(bg||0)+'s" repeatCount="indefinite"/>'+g+'</g>'}
+function TX(t,x,y,z,c){return'<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="'+(z||13)+'" fill="'+(c||"#e6f4f8")+'" font-family="Sora,sans-serif">'+t+'</text>'}
+function BL(g){return'<g class="blink">'+g+'</g>'}
+function DR(x1,y1,x2,y2,n,d,c){var h="";for(var i=0;i<n;i++)h+=T(I.drop(c),x1+" "+y1,x2+" "+y2,d,i*d/n);return h}
+function RC(x,y,w,h,f,s,r){return'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+(r||8)+'" fill="'+f+'"'+(s?' stroke="'+s+'" stroke-width="2"':"")+'/>'}
+function LN(x1,y1,x2,y2,c,w,d){return'<path d="M'+x1+' '+y1+'L'+x2+' '+y2+'" stroke="'+c+'" stroke-width="'+(w||3)+'" fill="none"'+(d?' stroke-dasharray="6 5"':"")+'/>'}
+function stack(x,n,y,col,lab){var h="";for(var k=0;k<n;k++)h+=FD(RC(x-30,y-k*15,60,12,col,"",6),7,k*.35);return h+TX(lab,x,y+30,13,"#8fc9db")}
+function pie(cx,cy,r,a,b){var C=2*Math.PI*r,r2=r-26,C2=2*Math.PI*r2;return'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="#27566d" stroke-width="20"/><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="#35d0e3" stroke-width="20" stroke-dasharray="'+C*a+' '+C+'" transform="rotate(-90 '+cx+' '+cy+')"/><circle cx="'+cx+'" cy="'+cy+'" r="'+r2+'" fill="none" stroke="#ff6b63" stroke-width="10" stroke-dasharray="0 999" transform="rotate(-90 '+cx+' '+cy+')"><animate attributeName="stroke-dasharray" values="0 999;'+C2*b+' 999;'+C2*b+' 999" dur="4s" repeatCount="indefinite"/></circle>'}
+function row(a,y,x){var h="";a.forEach(function(t,i){h+=FD(TX(t[0],x,y+i*34,t[1]||15,t[2]),6,i*.9)});return h}
+var SC={
+"C.01":function(){return LN(262,180,500,180,"#27566d",10)+T(I.drop(),"270 180","492 180",2.4)+BL(RC(508,120,8,82,"#ff6b63","",3))+U("house",570,185,1.7)+BL(U("doc",570,95,.9))+TX("SAR 3,400 unpaid",570,140,13,"#ff9a93")+TX("New connection request",380,225,13,"#8fc9db")},
+"C.02":function(){var h="",L=["Resident","Commercial","Government"];L.forEach(function(t,i){h+=RC(520,70+i*58,110,44,"#0b4a66","#35d0e3")+TX(t,575,97+i*58,13)});return h+T('<g transform="scale(.8)">'+I.doc()+'</g>',"290 150","498 150",3)+T('<g transform="scale(.8)">'+I.doc("#ffe9a8")+'</g>',"290 100","498 92",3,1.5)+TX("Commercial reg.",340,215,12,"#8fc9db")+TX("✓",648,156,22,"#35d49a")+BL(TX("✕",648,98,22,"#ff6b63"))},
+"C.03":function(){var h=U("clock",330,100,1.5);for(var i=0;i<9;i++)h+=(i<5?'<circle cx="'+(290+i*36)+'" cy="200" r="9" fill="#35d0e3"/>':'<circle class="blink" cx="'+(290+i*36)+'" cy="200" r="9" fill="#ff6b63"/>');return h+LN(470,170,470,225,"#f2b24c",2,1)+TX("5-day limit",470,242,12,"#f2b24c")+U("sms",560,100,1.4,"#7b8f9b")+BL(TX("✕",560,150,26,"#ff6b63"))+TX("No SMS on day 9",560,175,12,"#ff9a93")},
+"C.05":function(){return RC(268,50,215,185,"#0b4a66")+row([["800 m²"],["3,000 + 125 × 10",14],["VAT 15%"],["= SAR 4,887.50",17,"#35d49a"]],90,375)+U("doc",565,130,1.5)+TX("Quoted",565,180,13,"#8fc9db")+BL(TX("3,450",565,208,18,"#ff6b63"))},
+"C.06":function(){var h=RC(280,140,340,14,"#27566d","",7)+'<rect x="280" y="140" height="14" rx="7" fill="#35d0e3" width="0"><animate attributeName="width" values="0;340" dur="6s" repeatCount="indefinite"/></rect>';[1,2,3].forEach(function(i){h+=FD(U("bell",280+i*113-(i==3?10:0),105,.9),6,i*1.6-.6)+TX(i*30,280+i*113-(i==3?10:0),180,12,"#8fc9db")});return h+FD(U("doc",580,85,1),6,4.5)+TX("Quotation expires at 90 days",450,235,13,"#f2b24c")+TX("Reminder bells",360,70,13,"#8fc9db")},
+"C.07":function(){return TX("Work order",290,82,13,"#8fc9db")+T(U("truck",0,0,.9),"280 105","600 105",3)+TX("Payment",290,172,13,"#8fc9db")+T(U("coin",0,0,1.1),"280 200","600 200",3,1.6)+LN(280,125,630,125,"#27566d",2,1)+LN(280,220,630,220,"#27566d",2,1)+BL(TX("Work started before payment arrived",450,248,13,"#ff9a93"))},
+"C.08":function(){return RC(300,110,100,44,"#7b8f9b","",22)+'<circle cx="322" cy="132" r="17" fill="#e6f4f8"/>'+TX("Pending Start",350,185,13,"#ff9a93")+T(U("doc",0,0,.8),"270 70","340 120",2.5)+U("meter",540,130,1.5,NS)+DR(540,160,540,235,3,2.4)+BL(TX("Water used, agreement not active",450,250,12,"#ff9a93"))+TX("Closed work order",340,72,12,"#8fc9db")},
+"C.09":function(){var b='<g><animateTransform attributeName="transform" type="rotate" values="0 450 110;9 450 110;0 450 110" dur="4s" repeatCount="indefinite"/>'+LN(310,110,590,110,"#e6f4f8",6)+U("coin",330,95,1.2)+U("coin",360,95,1.2)+U("truck",560,82,1)+'</g>';return LN(450,110,450,220,"#9bb3c2",8)+'<path d="M400 230h100l-50-30z" fill="#9bb3c2"/>'+b+TX("Fees",330,70,13,"#8fc9db")+TX("Contractor cost",560,62,13,"#ff9a93")},
+"C.10":function(){return stack(340,7,215,"#f2c14e","C2M revenue")+stack(560,6,215,"#35d0e3","General ledger")+BL(RC(530,215-6*15,60,12,"none","#ff6b63",6))+TX("Gap",560,92,13,"#ff9a93")+LN(400,150,500,150,"#27566d",3,1)},
+"C.11":function(){return U("meter",350,140,1.8)+BL(RC(318,200,64,24,"#ff6b63","",8))+TX("OFF",350,217,15,"#fff")+DR(380,165,560,165,4,3)+BL(TX("Switched off, but water still flows",450,248,13,"#ff9a93"))},
+"C.12":function(){var w="";[1,2].forEach(function(i){w+='<path d="M'+(330+i*12)+' 60a'+(10+i*8)+' '+(10+i*8)+' 0 0 1 '+(20+i*16)+' 0" stroke="#35d0e3" stroke-width="3" fill="none"><animate attributeName="opacity" values="0;1;0" dur="1.6s" begin="'+i*.4+'s" repeatCount="indefinite"/></path>'});return U("meter",340,150,1.8,NS)+U("meter",560,150,1.8,"","#5a6e7a")+w+'<circle cx="340" cy="215" r="6" fill="#35d49a"/>'+TX("AMR: active, smart",340,240,12)+'<circle cx="560" cy="215" r="6" fill="#7b8f9b"/>'+TX("C2M: inactive",560,240,12)+LN(385,150,515,150,"#ff6b63",3,1)+BL(TX("✕",450,160,28,"#ff6b63"))},
+"C.13":function(){var h="";[["AMR",310],["MDM",450],["C2M",590]].forEach(function(x){h+=U("db",x[1],150,1.5)+TX(x[0],x[1],208,13)});return h+T(TX("42 m³",0,0,14,"#7fe3f2"),"330 120","430 120",2)+T(TX("42 m³",0,0,14,"#7fe3f2"),"470 120","570 120",2,2)+BL(TX("31 m³",590,95,16,"#ff6b63"))+TX("11 m³ lost on the last hop",450,245,13,"#ff9a93")},
+"C.14":function(){var h="";[310,390,470,550].forEach(function(x,i){h+=i==2?BL(U("meter",x,185,.9,"","#5a6e7a")+TX("?",x,160,22,"#ff6b63")):U("meter",x,185,.9)});return h+T(U("person",0,0,1),"280 110","560 110",6)+U("cloud",600,75,.7)+TX("Manual reads sent to C2M",450,245,13,"#8fc9db")+TX("Missed meter",470,232,12,"#ff9a93")},
+"C.15":function(){return U("meter",340,140,2.2,NS)+RC(280,45,120,22,"#f2c14e","",6)+TX("KEY ACCOUNT",340,61,12,"#352603")+RC(510,100,110,80,"#0b4a66","#ff6b63")+TX("C2M account",565,128,13)+TX("Residential",565,155,15,"#ff9a93")+BL(TX("≠",450,150,36,"#ff6b63"))+TX("Wrong tariff applied",565,215,13,"#ff9a93")},
+"C.16":function(){return U("meter",340,140,1.8,NF)+TX("0 m³",340,215,16,"#ff9a93")+U("house",560,185,1.7)+T(U("truck",0,0,.9),"300 235","540 235",3.5)+BL(TX("Zero use, yet tankers keep arriving",450,60,13,"#ff9a93"))+TX("4 months",340,240,12,"#8fc9db")},
+"C.17":function(){return U("meter",340,140,1.8,NL)+LN(300,120,380,120,"#f2b24c",2,1)+TX("0.8 m³ a day",340,215,15,"#ff9a93")+TX("limit 1.3",340,240,12,"#f2b24c")+U("house",560,185,1.7)+T(U("truck",0,0,.9),"300 245","540 245",3.5)+BL(TX("Low use, no field visit",450,60,13,"#ff9a93"))},
+"C.18":function(){var b='<g><animateTransform attributeName="transform" type="rotate" values="-14 330 70;14 330 70;-14 330 70" dur=".5s" repeatCount="indefinite"/>'+U("bell",330,70,1.4)+'</g>';return U("meter",330,160,1.5)+b+RC(430,125,70,34,"#0b4a66","#35d0e3",6)+'<rect x="436" y="131" height="22" width="40" rx="3" fill="#ff6b63"><animate attributeName="width" values="40;4;40" dur="4s" repeatCount="indefinite"/></rect>'+TX("Battery",465,180,12,"#8fc9db")+U("doc",570,140,1.3,"none")+RC(553,118,34,44,"none","#ff6b63",4)+BL(TX("No field activity",570,195,12,"#ff9a93"))},
+"C.19":function(){return RC(262,170,230,14,"#27566d","",4)+T(U("doc",0,0,.8),"270 150","470 150",2.5)+T(U("doc",0,0,.8),"270 150","470 150",2.5,.8)+T(U("doc",0,0,.8),"270 150","470 150",2.5,1.6)+BL(RC(500,100,8,100,"#ff6b63","",3))+U("doc",560,185,.9)+U("doc",575,170,.9)+U("doc",590,155,.9)+TX("Block bill stuck",560,95,13,"#ff9a93")+TX("6 months, not cleared",450,245,13,"#f2b24c")},
+"C.20":function(){var h="";["Cycle A","Cycle B","Cycle C"].forEach(function(t,i){h+=RC(480,65+i*52,140,38,"#0b4a66","#35d0e3")+TX(t,550,89+i*52,13)});h+=T(U("person",0,0,.55),"280 82","520 82",3)+T(U("person",0,0,.55),"280 134","520 134",3,1)+T(RC(-14,-18,28,36,"#ff6b63","",5)+TX("?",0,7,18,"#fff"),"280 186;380 200;430 250","",3,2);return h+TX("Account with no cycle",340,240,12,"#ff9a93")},
+"C.21":function(){var h="";[310,390,470,550].forEach(function(x,i){h+=U("house",x,180,1.2);h+=i==3?BL(RC(x-17,70,34,44,"none","#ff6b63",4)+TX("?",x,102,22,"#ff6b63")):T(U("doc",0,0,.8),x+" 150",x+" 80",2.4,i*.5)});return h+TX("Active service agreements",450,235,13,"#8fc9db")+TX("No invoice raised",550,250,12,"#ff9a93")},
+"C.22":function(){var h="",p=["0.1","1","3","4","6"];p.forEach(function(t,i){h+=RC(280+i*66,210-i*30,62,30+i*30,"#0b4a66","#35d0e3",4)+TX(t,311+i*66,200-i*30,13,"#f2c14e")});return h+T(I.drop(),"290 195;350 165;410 135;410 135","",5)+BL(TX("Billed at 1.0 instead of 3.0",470,70,13,"#ff9a93"))+TX("SAR per m³, by consumption tier",450,252,12,"#8fc9db")},
+"C.23":function(){var h=U("doc",310,150,1.3)+U("doc",322,142,1.3)+U("cloud",590,110,1.6)+TX("C2M bills",310,205,13)+TX("SADAD",590,150,13);for(var i=0;i<5;i++)h+=T(U("doc",0,0,.5),"340 130","570 110",2.6,i*.5);return h+T(U("doc",0,0,.5),"340 130;450 170;470 250","",2.6,.7)+TX("100,000 sent, 99,850 uploaded",450,245,13,"#ff9a93")},
+"C.24":function(){return '<polyline points="280,220 330,205 380,200 430,160 480,110 530,75" fill="none" stroke="#35d0e3" stroke-width="4" stroke-dasharray="330" stroke-dashoffset="330"><animate attributeName="stroke-dashoffset" values="330;0;0;330" keyTimes="0;.5;.9;1" dur="4s" repeatCount="indefinite"/></polyline>'+LN(270,120,630,120,"#f2b24c",2,1)+TX("150% of 6-month average",420,110,12,"#f2b24c")+BL('<circle cx="480" cy="110" r="8" fill="#ff6b63"/>')+U("sms",580,190,1.2,"#7b8f9b")+BL(TX("✕",580,235,22,"#ff6b63"))+TX("No alert sent",580,252,12,"#ff9a93")},
+"C.25":function(){var h="";for(var i=0;i<6;i++){h+=RC(280+i*58,150,50,50,"#0b4a66","#2b6580",6)+TX(["Jan","Feb","Mar","Apr","May","Jun"][i],305+i*58,180,12);if(i<3)h+=FD(RC(280+i*58,150,50,50,i==2?"#ff6b63":"#f2c14e","",6)+TX("E",305+i*58,185,22,"#222"),7,i*1.2)}return h+U("meter",450,85,.9,NL)+TX("Reading exists in MDM",540,90,12,"#35d49a")+BL(TX("3rd estimate in 6 months",450,235,13,"#ff9a93"))},
+"C.26":function(){var h=U("db",300,150,1.2),xs=[470,530,590];xs.forEach(function(x,i){h+=U("house",x,190,.9)+T(U("doc",0,0,.6),"330 140",x+" 140",2.2,i*.6)});return h+T(U("doc",0,0,.6),"330 140;450 70;330 140","",3,.3)+BL(TX("Returned",440,60,12,"#ff6b63"))+TX("✓",530,125,18,"#35d49a")+TX("Delivered",530,245,12,"#8fc9db")},
+"C.27":function(){var h='<path d="M360 150L540 150L480 190L420 190Z" fill="#0b4a66" stroke="#35d0e3" stroke-width="2"/>'+TX("SADAD",450,172,13)+U("db",450,225,.8)+TX("C2M ledger",450,252,11,"#8fc9db");for(var i=0;i<4;i++)h+=T(U("coin",0,0,.9),(390+i*20)+" 50",(430+i*8)+" 150",2.2,i*.5);return h+T(U("coin",0,0,.9),"560 60;590 140;610 230","",2.2,.4)+BL(TX("Missing payment",590,100,12,"#ff9a93"))},
+"C.28":function(){return U("doc",330,140,2)+FD('<g transform="translate(330 140) rotate(-12)"><rect x="-50" y="-16" width="100" height="32" rx="6" fill="none" stroke="#35d49a" stroke-width="3"/>'+TX("APPROVED",0,6,15,"#35d49a")+'</g>',4)+TX("3,000",330,205,18,"#35d49a")+TX("Approved",330,226,12,"#8fc9db")+BL(TX("≠",450,150,34,"#ff6b63"))+U("doc",570,140,2,"#ffe0de")+TX("5,000",570,205,18,"#ff6b63")+TX("Posted",570,226,12,"#8fc9db")},
+"C.29":function(){return RC(280,150,340,14,"#27566d","",7)+'<rect x="280" y="150" height="14" rx="7" fill="#35d0e3" width="0"><animate attributeName="width" values="0;150;150;280;280" keyTimes="0;.35;.5;.85;1" dur="5s" repeatCount="indefinite"/></rect>'+LN(430,100,430,190,"#35d49a",3)+TX("Disconnected 10 March",430,88,12,"#35d49a")+BL(RC(430,150,130,14,"#ff6b63","",7))+TX("15 extra days billed",500,190,13,"#ff9a93")+U("doc",590,95,1)},
+"C.30":function(){return U("meter",340,150,1.7)+T(U("lock","0","0",1.1),"340 90;340 90","",1)+FD('<g transform="translate(386 70) rotate(0)"><path d="M-9 0v-8a9 9 0 0 1 18 0" fill="none" stroke="#35d49a" stroke-width="5"/></g>',4)+RC(500,115,90,40,"#35d49a","",20)+'<circle cx="570" cy="135" r="15" fill="#fff"/>'+TX("Switched ON",545,185,13,"#35d49a")+T(U("coin",0,0,1.2),"270 230","470 230",5)+TX("Fee SAR 115 + dues arrive late",450,250,12,"#ff9a93")},
+"C.31":function(){return RC(280,140,340,26,"#27566d","",6)+'<rect x="280" y="140" height="26" rx="6" fill="#35d0e3" width="0"><animate attributeName="width" values="0;216;300;300" keyTimes="0;.5;.9;1" dur="5s" repeatCount="indefinite"/></rect>'+LN(496,110,496,200,"#f2b24c",3,1)+TX("36-month limit",496,100,12,"#f2b24c")+BL(RC(496,140,84,26,"#ff6b63","",6))+TX("Plan: 50 months, SAR 60 a month",450,225,13,"#ff9a93")+U("coin",300,95,1.3)+TX("SAR 3,000 balance",350,100,12,"#8fc9db")},
+"C.32":function(){return FD(U("sms",300,130,1),8,0)+FD(U("sms",385,130,1),8,1.6)+FD(U("truck",480,140,1),8,3.2)+FD(U("meter",585,130,1.2),8,4.8)+'<g fill="#35d0e3"><rect x="262" y="180" width="360" height="3"/></g>'+TX("Warning 1",300,175,12)+TX("Warning 2",385,175,12)+TX("Disconnect",480,175,12)+TX("Meter off",585,175,12)+BL(DR(585,150,585,235,2,2,"#ff6b63"))+TX("Water still used after disconnection",450,250,12,"#ff9a93")},
+"C.33":function(){var h=stack(360,7,215,"#f2c14e","Over 90 days")+U("clock",530,90,1.4)+TX("90+ days",530,140,14,"#ff9a93");h+='<g><animateTransform attributeName="transform" type="rotate" values="-12 530 190;12 530 190;-12 530 190" dur=".5s" repeatCount="indefinite"/>'+U("bell",530,190,1.1)+'</g>';return h+TX("Phone ringing, no follow-up",530,235,12,"#ff9a93")},
+"C.35":function(){return '<circle cx="400" cy="145" r="92" fill="#0b4a66" stroke="#35d0e3" stroke-width="3" stroke-dasharray="8 6"/>'+LN(330,145,470,145,"#2e9bff",6)+LN(400,80,400,210,"#2e9bff",6)+TX("Piped network area",400,75,12,"#8fc9db")+T(U("truck",0,0,.9),"640 225","420 150",3.5)+BL(TX("✕",400,165,30,"#ff6b63"))+TX("Tanker served inside coverage",450,250,12,"#ff9a93")},
+"C.36":function(){var h="";[0,1,2,3].forEach(function(i){h+='<g transform="translate('+(300+i*40)+' '+(150-i*10)+')"><rect x="-17" y="-22" width="34" height="44" rx="4" fill="#fff"><animate attributeName="fill" values="#fff;#f2c14e;#ff6b63" dur="5s" begin="'+i*.5+'s" repeatCount="indefinite"/></rect><rect x="-10" y="-10" width="20" height="3" fill="#7a97a8"/><rect x="-10" y="-2" width="20" height="3" fill="#7a97a8"/></g>'});return h+U("clock",560,100,1.5)+TX("120 days",560,150,15,"#ff9a93")+TX("Unpaid invoices ageing",360,225,13,"#8fc9db")},
+"C.37":function(){return U("meter",320,140,1.5,NS)+LN(350,150,500,150,"#27566d",8)+DR(350,150,500,150,3,2.4)+U("truck",560,160,1.3)+TX("Station meter",320,195,12)+RC(280,215,100,12,"#35d0e3","",6)+TX("20,000 m³",330,248,12)+RC(480,215,130,12,"#ff6b63","",6)+TX("26,000 m³ in tankers",545,248,12,"#ff9a93")},
+"C.38":function(){return RC(420,55,60,130,"#0b4a66","#35d0e3",6)+U("flask",450,100,1.1)+T(U("truck",0,0,1),"270 215","610 215",5)+FD(TX("✓ Tested",450,205,15,"#35d49a"),5,2)+FD(U("coin",450,60,1),5,2.2)+TX("SAR 1,162 test fee per tanker",450,248,12,"#8fc9db")},
+"C.39":function(){return U("truck",360,160,1.8)+RC(332,175,56,18,"#fff","",3)+TX("REG",360,189,11,"#222")+T(U("coin",0,0,1.1),"520 60","520 140",2)+U("doc",540,175,1.2)+FD(TX("SAR 200",540,115,14,"#f2c14e"),4)+BL(TX("500 tankers, 480 invoiced",450,245,13,"#ff9a93"))},
+"C.40":function(){return RC(450,60,12,130,"#7b8f9b","",3)+T(U("truck",0,0,.9),"270 200","420 200",3)+T(U("truck",0,0,.9),"270 200","600 200",3,3.2)+U("db",590,105,.9)+TX("Wallet",590,150,12)+T(U("coin",0,0,.9),"590 120","590 75",2,0.8)+BL(TX("Second truck: no deduction",500,245,13,"#ff9a93"))},
+"C.41":function(){return pie(360,150,62,.4,.36)+TX("40% expected",360,245,13,"#35d0e3")+TX("36% invoiced",540,170,14,"#ff6b63")+U("db",540,110,1.2)+TX("ELM",540,75,12,"#8fc9db")+LN(430,140,500,125,"#27566d",3,1)},
+"C.42":function(){return U("truck",330,140,1.7)+RC(305,155,50,16,"#fff","",3)+TX("SAR 200",330,168,10,"#222")+pie(540,150,56,.4,.3)+TX("NWC share",540,235,12,"#8fc9db")+BL(TX("Missing in GL",450,60,13,"#ff9a93"))},
+"C.44":function(){return U("flask",340,140,1.8)+'<g><animateTransform attributeName="transform" type="rotate" values="-8 480 90;8 480 90;-8 480 90" dur="2s" repeatCount="indefinite"/>'+RC(450,95,60,44,"#35d0e3","",6)+TX("250",480,125,18,"#04202c")+'</g>'+TX("List price",480,160,12,"#8fc9db")+'<g><animateTransform attributeName="transform" type="rotate" values="8 570 90;-8 570 90;8 570 90" dur="2s" repeatCount="indefinite"/>'+RC(540,95,60,44,"#ff6b63","",6)+TX("200",570,125,18,"#fff")+'</g>'+TX("Invoiced",570,160,12,"#ff9a93")},
+"C.45":function(){return U("flask",310,130,1.2)+LN(350,130,410,130,"#35d0e3",3)+U("doc",450,130,1.3)+LN(480,130,540,130,"#35d0e3",3,1)+BL('<circle cx="580" cy="130" r="22" fill="none" stroke="#ff6b63" stroke-width="3" stroke-dasharray="6 5"/>'+TX("?",580,140,24,"#ff6b63"))+TX("Order closed",310,185,12)+TX("Invoice",450,185,12)+TX("Receipt missing",580,185,12,"#ff9a93")+T(I.coin(),"340 230","520 230",3)},
+"C.46":function(){return U("flask",320,130,1.4)+stack(560,4,200,"#35d0e3","Ledger")+stack(320,5,235,"#f2c14e","")+T(U("coin",0,0,.9),"360 130","540 150",2.5)+TX("LIMS revenue SAR 80,000",320,205,12,"#8fc9db")+BL(TX("GL: SAR 72,000",560,70,13,"#ff9a93"))},
+"C.49":function(){return U("person",310,130,1.3)+RC(285,80,50,12,"#f2c14e","",5)+'<path d="M450 70L485 130H415Z" fill="#f2b24c"/>'+TX("!",450,122,28,"#222")+T(U("coin",0,0,1),"480 135","590 190",2.5)+U("db",600,205,.9)+BL(TX("Penalty not booked in GL",450,245,13,"#ff9a93"))+TX("Contractor",310,185,12)},
+"C.54":function(){var h=RC(262,185,230,12,"#27566d","",4),b="";for(var i=0;i<4;i++)b+=T(U("bottle",0,0,.9),"275 160","480 160",3,i*.75);return h+b+RC(520,120,90,75,"#0b4a66","#35d0e3",6)+TX("Sold",565,150,13)+TX("500,000",565,175,16,"#35d49a")+U("doc",330,85,.9)+TX("Invoiced 480,000",430,95,13,"#ff9a93")},
+"C.55":function(){return RC(262,120,376,44,"#1f6aa5","",10)+DR(270,142,630,142,6,4,"#bfe3ee")+DR(350,170,350,245,3,1.6,"#ff6b63")+DR(520,170,520,245,3,1.9,"#ff6b63")+TX("100% supplied",300,105,13,"#7fe3f2")+TX("72% billed",590,105,13,"#35d49a")+BL(TX("28% leaks out as NRW",450,250,13,"#ff9a93"))}
+};
+function frame(c,full){var s=c.s.slice(0,4),n=s.length,h="";
+var ys=s.map(function(_,i){return n===1?150:56+i*(188/(n-1))});
+s.forEach(function(t,i){var y=ys[i];h+='<rect x="28" y="'+(y-20)+'" width="196" height="40" rx="10" fill="#082a40" stroke="#2b6580"/><text x="126" y="'+(y+5)+'" text-anchor="middle" font-size="13" fill="#e6f4f8" font-family="Sora,sans-serif">'+(t.length>24?t.slice(0,23)+"…":t)+'</text><path d="M224 '+y+'L250 150" stroke="#27566d" stroke-width="2" fill="none"/>';
+for(var k=0;k<2;k++)h+='<circle r="5" fill="#7fe3f2"><animateMotion dur="2.2s" begin="'+(k*1.1+i*.3)+'s" repeatCount="indefinite" path="M224 '+y+'L250 150"/></circle>'});
+h+=BG+SC[c.id]();
+h+='<path d="M650 150H668" stroke="#7a3036" stroke-width="2"/>';for(var k=0;k<2;k++)h+='<circle r="5" fill="#ff6b63"><animateMotion dur="1.6s" begin="'+(k*.8)+'s" repeatCount="indefinite" path="M650 150H668"/></circle>';
+h+='<rect x="668" y="98" width="204" height="104" rx="14" fill="#3a1218" stroke="#ff6b63" stroke-width="2"/><text x="770" y="132" text-anchor="middle" font-size="13" fill="#ff9a93" font-family="Sora,sans-serif">Exceptions</text><text x="770" y="164" text-anchor="middle" font-size="16" font-weight="600" fill="#fff" font-family="Sora,sans-serif">'+c.e+'</text><text x="770" y="188" text-anchor="middle" font-size="12" fill="#ffb3ad" font-family="Sora,sans-serif" class="blink">sent to owner</text>';
+h+='<text x="126" y="275" text-anchor="middle" font-size="13" fill="#8fc9db" font-family="Sora,sans-serif">Data sources</text><text id="cap" x="450" y="285" text-anchor="middle" font-size="14" fill="#bfe3ee" font-family="Sora,sans-serif"></text>';return h}
+
+var X={
+"C.01":["List new water and wastewater connection case IDs with status from C2M~Map each case ID to its customer (person) ID~Check the customer’s previous outstanding in C2M~Flag cases created despite dues~Flag cases closed despite dues","A villa’s new connection case 4821 was closed, yet the customer still owed SAR 3,400 on an older account. The case is flagged to Customer Service."],
+"C.02":["Pull a sample of closed new-connection cases from WFM~Get the customer ID for each case~Open the scanned documents in C2M~Match documents to the segment: resident (national or residency ID, permit, title deed), commercial (commercial registration, owner ID), government (registration or official letter)","A customer is set up as Resident, but the file holds a commercial registration number. The segment, and so the tariff, is wrong."],
+"C.03":["List new water and wastewater connection requests~Read case logs for the time from order to quotation (policy: 5 days)~Check an SMS about approval or rejection went out within 5 working days~Highlight open cases and find the delay reason~Quantify the opportunity lost: connection fee plus estimated average consumption","A request has no quotation or SMS on day 9 because the feasibility assessment was never assigned. The fee and expected consumption are counted as delayed revenue."],
+"C.05":["Take the inputs: service type, customer type, rounded building area, units~Apply the fee band for that customer type~Add the extra unit charge (residential only)~Add 15% VAT~Compare with the quotation in C2M","Residential water, 800 m²: 3,000 + (800 − 675) × 10 = SAR 4,250. With 15% VAT the payable amount is SAR 4,887.50. A quotation for SAR 3,450 is flagged."],
+"C.06":["List quotations and the reminders sent for them~Check a reminder was sent within the 90 days~After 90 days, check the quotation has expired","A quotation issued on 1 July has no reminder by day 60 and is still open on day 95. Both are exceptions."],
+"C.07":["List implementation work orders in WFM and payments received~Look for payment received but no work order~Look for a work order created before payment~Look for a work order with no payment at all","A customer paid through SADAD on Monday, but no work order exists a week later, so the connection is delayed."],
+"C.08":["List implementation work orders closed in WFM~Check each has an active service agreement in C2M~For new connections, check AMR for consumption on ‘Pending Start’ agreements","The meter was installed and the work order closed, but the agreement is still Pending Start while AMR shows 60 m³ used."],
+"C.09":["Take connection fees received from C2M~Estimate contractor cost from successful work orders in WFM~Compare revenue with cost each month","Fees of SAR 900,000 against estimated contractor cost of SAR 950,000 in a month give a negative margin to review."],
+"C.11":["List wastewater quotations that expired after 90 days~Check a field activity exists to switch the meter off~For switched-off meters, check AMR for consumption","A customer never paid for the wastewater connection. The meter was switched off, yet AMR shows use a week later, so the Reading team investigates unauthorised use."],
+"C.12":["Take the meter list from AMR and from C2M~Active in AMR but inactive in C2M~Inactive in AMR but active in C2M~Active or inactive in AMR but missing in C2M~Smart flag differs between the two","Meter MTR-10517 sends reads in AMR but is inactive in C2M, so its readings are not billed."],
+"C.13":["Get meter details from AMR and MDM and compare by meter ID~Reconcile AMR with C2M: active or inactive in C2M with no consumption in AMR~Compare consumption across AMR, MDM and C2M~Check a field activity exists for meters marked off~Find missing reads when fixed gateways were down","MDM and AMR record 42 m³ for the month but C2M billed 31 m³, so 11 m³ was lost between systems."],
+"C.14":["List meters that needed a manual reading through Mobility~Check readings exist in C2M~List meters with no reading when the cycle closes","Of 2,000 manual meters in a cycle, 37 have no reading at cycle close and go to the Reading team."],
+"C.15":["List bulk meters from AMR~Separate internal, SWCC and key account meters~Check a key account has no C2M account, an internal or SWCC meter has an account, or a key account is set up as residential~Send mismatches to Smart Operations and the C2M team","A key account meter in AMR is registered as residential in C2M, so it is billed on the wrong tariff."],
+"C.16":["Find accounts with zero consumption in AMR~Map the meter ID to the C2M account~Check in TMS whether the customer orders tankers~Ask the Reading and Billing teams what they did~Highlight accounts with no action over a long zero period","A shop shows zero use for four months while ordering tankers monthly, which suggests a bypass or a stuck meter."],
+"C.17":["Find low-use accounts: residential and VIP under 0.5 m³ a day, commercial under 1.3, government under 2.3~Map meter IDs to C2M accounts~Check tanker orders in TMS~Ask the teams what they did~Highlight no-action accounts","A commercial account averaging 0.8 m³ a day for three months, below the 1.3 limit, has had no field visit."],
+"C.18":["List meters with alarms in MDM~Filter by type such as backflow and low battery~Check a field activity was created~Highlight alarms with no action~Check no-fault investigations were not charged to the customer~Report backflow cases","A backflow alarm has been open for 20 days with no field activity, so it goes to Operations."],
+"C.55":["Take supplied volume from the water production system~Take billed volume from C2M~Compare to get the NRW percentage~Share results with the NRW team and ask for corrective action","10 million m³ supplied and 7.2 million m³ billed gives 28% NRW for the team to explain."],
+"C.10":["Calculate monthly revenue by stream in C2M: water and wastewater connection (at payment), water, wastewater, salt water, tanker and TSE sales~Find the matching GL accounts (4XXXXX)~Check completeness and accuracy by account","Tanker sales are SAR 1.2m in C2M but SAR 1.1m in the tanker GL account, leaving SAR 100,000 to explain."],
+"C.19":["Get the block bill report from C2M~Find accounts blocked again and again and review the action taken~Check cleared bills moved from Freezable to Frozen~Flag block bills not cleared six months after consumption","One account has had a block bill in five of the last six months with no root-cause fix."],
+"C.20":["Take the customer information dump~Check every billable account has a reading and billing cycle~List accounts with blank cycles for the Billing team~Check cycles match the customer’s area","120 new accounts have a blank billing cycle and will be missed in next month’s bill run."],
+"C.21":["List active customers with active water, salt water or wastewater service agreements~Check each has an invoice in the billing dump~Find invoices raised with zero amount","15 active agreements have no invoice this month, and 40 invoices carry zero amount."],
+"C.22":["Take the billing dump and the tariff master~Check meter fees by diameter (0–20 mm SAR 5, 25–40 mm SAR 10, 50 mm SAR 15) and government fixed fees~Check the rate on each consumption tier for water and wastewater~Where no reading exists, check fixed consumption (villa 45 m³, apartment or house 37.5, commercial 80, government 99.25)~Wastewater uses 50% of the fixed value","A villa with no reading must be billed 45 m³, but its bill shows 30 m³, so it is flagged."],
+"C.23":["Take the bill amount generated in C2M~Take the SADAD report, including Payfort~Reconcile count and amount","C2M generated 100,000 bills worth SAR 12.4m, but SADAD holds 99,850, so 150 bills cannot be paid online."],
+"C.24":["Take daily consumption from AMR~Compare with 150% of the customer’s last six-month average~Check a high usage alert was sent~Also check cases above the credit limit with no alert","A customer averaging 40 m³ a month reaches 65 m³ with no SMS, then disputes the bill."],
+"C.25":["List customers billed on estimates~Check no reading existed in MDM~Check no estimate more than twice in six months~Check the estimate uses the six-month average~If no actual use exists, check the regulator’s pre-defined tariff","A customer is estimated for the third time in six months although MDM already held a reading."],
+"C.26":["List customers whose bills were generated in C2M~Take the bill delivery report~Reconcile the two and list bills not delivered","2,300 of 100,000 generated bills show no delivery status, so those customers may never pay."],
+"C.28":["Get adjustments posted in the billing system~Report by number and amount~Sample cases and get the reason, for example an adjustment despite a bill or high-bill notification, or wrong billing units~Check approval under the authority matrix~Check posted amount equals approved amount~If the customer paid, check the positive balance","A credit of SAR 5,000 is posted but only SAR 3,000 was approved."],
+"C.29":["Take the final invoices from billing~Compare invoice consumption dates with the service agreement disconnection date~Send exceptions to the Billing team","Disconnection was on 10 March, but the final invoice covers consumption until 25 March."],
+"C.27":["Take payments received on SADAD, gateways and Etimad (government)~Compare with payments posted in C2M~List payments missing in billing","SAR 80,000 was received through SADAD yesterday but only SAR 72,000 is posted in C2M."],
+"C.30":["List accounts that were disconnected~Get their meter details~Check AMR shows new readings while dues remain unpaid~Check a switched-on meter with instalments, if any~Check the SAR 115 reconnection fee (with VAT) was charged","AMR shows use on a disconnected account that still owes SAR 2,100 and was not charged the reconnection fee."],
+"C.31":["List customers who chose an instalment plan~Check the invoice is over SAR 1,000~Check the monthly instalment is at least SAR 200~Check the period is no more than 36 months~Check only one scheme per service agreement~Check there was no billing dispute at approval","A SAR 3,000 balance is spread over 50 months at SAR 60 a month, breaking both the monthly minimum and the 36-month limit."],
+"C.32":["Select accounts with unpaid over SAR 1,000 or more than three unpaid bills~Check two warning SMS were sent~Check a disconnection field activity exists in WFM~Check AMR shows no consumption after the activity closed~Check meter status is off in AMR and C2M","The contractor closed the disconnection order, but AMR still shows 12 m³ used the next week."],
+"C.33":["Get ageing from ERP for accounts 113101 to 113106 (residential, commercial, industrial, VIP, government)~List the top balances older than 90 days~Ask the Collection team about internal or external collection actions","A government account owes SAR 2.4m for over 90 days with no collection follow-up."],
+"C.35":["List tanker requests from TMS~Check customers with outstanding over three months in C2M~Check delivery area against the network coverage report","A tanker was delivered to a customer owing five months of bills, inside an area already covered by the pipe network."],
+"C.36":["Get unsettled invoices from ERP (TSE 113110, tanker sales 113104, ELM 113151)~Find payment terms and due dates in the signed agreement~Review the actions taken by the primary team","A rental invoice is 120 days past due with no reminder sent."],
+"C.37":["Trend monthly AMR readings for each filling station~Compare AMR volume with total tanker capacity supplied~Check invoices exist for all active contractor accounts~Check consumption × agreed rate equals the invoice, every month","A station meter reads 20,000 m³ while the tanker capacity supplied totals 26,000 m³."],
+"C.38":["List active tankers from TMS~Check LIMS charged SAR 1,162 with VAT for each tanker’s water testing","200 active tankers should bring SAR 232,400, but invoices cover only 190 tankers."],
+"C.39":["List active registered water tankers in TMS~Compute SAR 200 × number of tankers~Check invoices were generated~Check revenue in GL 416201 or 416202","500 tankers means SAR 100,000, but invoices total SAR 95,000."],
+"C.40":["Get tanker entries at dumping stations from ELM and the wallet statement~Find entries recorded with no wallet deduction~Check the fee deducted (SAR 15.25 or SAR 26 by cluster)","A tanker entry is recorded at 09:14 but no deduction appears in its wallet."],
+"C.41":["Get the tanker wallet statement from ELM~Apply the contract’s yearly revenue share slab to find NWC’s share~Check the primary team’s calculation and the ERP invoice~Check GL account 412106","Illustrative: entry fees of SAR 1m at a 40% share expect SAR 400,000, but the invoice is for SAR 360,000."],
+"C.42":["Get wastewater tankers from the ELM report~Compute SAR 200 × tankers and NWC’s share by the contract’s year slab~Check revenue in GL 415101","300 tankers means SAR 60,000 of registration fees, and the NWC share is missing from the GL."],
+"C.44":["Take the price list by type of water test~Check the rate on each LIMS invoice for its test type","Illustrative: a test listed at SAR 250 is invoiced at SAR 200."],
+"C.45":["List customer orders closed in LIMS with an invoice~Check ERP receivable applications where the receipt number is blank and status is not paid~Match TRX_NUMBER between LIMS and ERP~Send unpaid invoices to the cluster","An order is closed and the report delivered, but the invoice has no receipt."],
+"C.46":["Calculate water testing revenue from LIMS~Take GL account 411107~Compare completeness and accuracy","Illustrative: LIMS shows SAR 80,000 but the GL holds SAR 72,000."],
+"C.49":["Take penalty invoices raised on contractors from ERP~Calculate the violation amount~Check it is booked in GL 416101 to 416106","A penalty of SAR 50,000 was invoiced but is missing from the GL."],
+"C.54":["Take the Zamzam stock movement report~Opening stock minus closing stock gives bottles sold~Reconcile with invoices raised~Recompute the revenue share at SAR 0.01 a bottle~Check GL account 416219","500,000 bottles sold gives a SAR 5,000 share, but invoices cover only 480,000 bottles."]
+};
+function stepsOf(id){return (X[id]?X[id][0]:"").split("~")}
+var EX={
+"C.01":"Case 4821=Villa new connection;Case status=Closed;Previous outstanding=SAR 3,400=b|0,3400,SAR,Allowed,Owed",
+"C.02":"Documents on file=Commercial registration;Customer segment=Resident=b;Expected segment=Commercial=o",
+"C.03":"Request date=Day 1;SMS due=Day 5;Today=Day 9;Quotation=Not generated=b;Reason=Feasibility not assigned|5,9,days,Policy,Actual",
+"C.05":"Area=800 m²;Fee=3,000 + 125 × 10 → 4,250;VAT 15%=SAR 637.50;Payable=SAR 4,887.50=o;Quoted=SAR 3,450=b|4887.5,3450,SAR,Payable,Quoted",
+"C.06":"Quotation issued=1 July;Reminder due=within 90 days;Reminders by day 60=None=b;Status on day 95=Still open=b|90,95,days,Expiry,Actual",
+"C.07":"Customer paid=Monday via SADAD;Work order=None created=b;A week later=Connection delayed=b",
+"C.08":"Work order=Closed;Service agreement=Pending Start=b;AMR consumption=60 m³=b",
+"C.09":"Connection fees=SAR 900,000;Contractor cost=SAR 950,000=b;Margin=−SAR 50,000=b|950000,900000,SAR,Cost,Fees",
+"C.11":"Wastewater quotation=Expired after 90 days;Meter=Switched off=o;AMR a week later=Consumption recorded=b;Next step=Reading team investigates",
+"C.12":"Meter=MTR-10517;AMR=Active, sending reads=o;C2M=Inactive=b;Result=Reads not billed=b",
+"C.13":"MDM=42 m³;AMR=42 m³;C2M billed=31 m³=b|42,31,m³,MDM and AMR,C2M",
+"C.14":"Manual meters in cycle=2,000;Readings received=1,963=o;Missing at cycle close=37=b|2000,1963,meters,Needed,Read",
+"C.15":"Meter in AMR=Key account;Account in C2M=Residential=b;Effect=Wrong tariff=b",
+"C.16":"Shop consumption=0 m³ for 4 months=b;Tanker orders=Every month=b;Suspected cause=Bypass or stuck meter",
+"C.17":"Commercial limit=1.3 m³ a day;Actual average=0.8 m³ a day=b;Duration=3 months;Field visit=None=b|1.3,0.8,m³ a day,Limit,Actual",
+"C.18":"Alarm=Backflow;Open for=20 days=b;Field activity=None=b;Next step=Escalate to Operations",
+"C.55":"Supplied=10 million m³;Billed=7.2 million m³;NRW=28%=b|10,7.2,million m³,Supplied,Billed",
+"C.10":"Tanker sales in C2M=SAR 1.2m;Tanker GL account=SAR 1.1m=b;Unexplained=SAR 100,000=b|1.2,1.1,SAR m,C2M,GL",
+"C.19":"Block bill months=5 of last 6=b;Root cause=Not fixed=b;Next step=Billing team reviews",
+"C.20":"New accounts=120;Billing cycle=Blank=b;Effect=Missed in next bill run=b",
+"C.21":"Active agreements without invoice=15=b;Zero-amount invoices=40=b;Next step=Billing team reviews",
+"C.22":"Customer=Villa, no reading;Fixed consumption=45 m³=o;Billed=30 m³=b|45,30,m³,Policy,Billed",
+"C.23":"Bills in C2M=100,000 (SAR 12.4m);Bills on SADAD=99,850=b;Cannot be paid online=150=b|100000,99850,bills,C2M,SADAD",
+"C.24":"Average use=40 m³ a month;Threshold at 150%=60 m³;Actual=65 m³=b;SMS alert=Not sent=b|60,65,m³,Threshold,Actual",
+"C.25":"Estimated bills in 6 months=3=b;Allowed=2;MDM reading=Available=b|2,3,times,Allowed,Actual",
+"C.26":"Bills generated=100,000;Delivered=97,700=o;Not delivered=2,300=b|100000,97700,bills,Generated,Delivered",
+"C.28":"Approved=SAR 3,000=o;Posted=SAR 5,000=b;Excess=SAR 2,000=b|3000,5000,SAR,Approved,Posted",
+"C.29":"Disconnection date=10 March=o;Invoice covers until=25 March=b;Extra days billed=15=b|10,25,March date,Disconnection,Invoice end",
+"C.27":"Received on SADAD=SAR 80,000;Posted in C2M=SAR 72,000=b;Missing=SAR 8,000=b|80000,72000,SAR,SADAD,C2M",
+"C.30":"Account=Disconnected;Dues=SAR 2,100=b;AMR=New usage=b;Reconnection fee=SAR 115 not charged=b",
+"C.31":"Balance=SAR 3,000;Period=50 months=b;Monthly instalment=SAR 60=b|36,50,months,Limit,Plan",
+"C.32":"Warning SMS=2 sent=o;Disconnection order=Closed by contractor=o;AMR next week=12 m³ used=b",
+"C.33":"Government account=SAR 2.4m;Age=Over 90 days=b;Collection action=None=b",
+"C.35":"Customer dues=5 months=b;Area=Inside network coverage=b;Tanker=Delivered=b",
+"C.36":"Rental invoice=120 days past due=b;Reminder=None=b;Next step=Rental team follows up",
+"C.37":"Station meter=20,000 m³;Tanker capacity supplied=26,000 m³=b|26000,20000,m³,Tankers,Meter",
+"C.38":"Active tankers=200;Expected fees=SAR 232,400;Invoiced tankers=190=b|200,190,tankers,Active,Invoiced",
+"C.39":"Tankers=500;Expected fee=SAR 100,000;Invoiced=SAR 95,000=b|100000,95000,SAR,Expected,Invoiced",
+"C.40":"Entry recorded=09:14;Wallet deduction=None=b;Expected fee=SAR 15.25 or 26",
+"C.41":"Illustrative fees=SAR 1m;NWC share at 40%=SAR 400,000;Invoice=SAR 360,000=b|400000,360000,SAR,Expected,Invoice",
+"C.42":"Tankers=300;Registration fee=SAR 60,000;GL entry=Missing=b",
+"C.44":"Illustrative list price=SAR 250;Invoiced=SAR 200=b|250,200,SAR,List,Invoiced",
+"C.45":"Order=Closed, report sent;Invoice=Issued;Receipt=None=b",
+"C.46":"Illustrative LIMS revenue=SAR 80,000;GL=SAR 72,000=b|80000,72000,SAR,LIMS,GL",
+"C.49":"Penalty invoiced=SAR 50,000;Penalty GL accounts=Not booked=b",
+"C.54":"Bottles sold=500,000;Share at SAR 0.01=SAR 5,000;Invoiced bottles=480,000=b|500000,480000,bottles,Sold,Invoiced"};
+var GS=[[/tariff/i,"Approved price master for water, wastewater and salt water. The control recomputes charges against it."],[/price list/i,"Approved list of rates by type of water test."],[/estimation/i,"The matrix that sets how estimated bills are calculated."],[/authority|approval/i,"Records of who may approve adjustments and what approvals were given."],[/cycle/i,"Master of reading and billing cycles by zone."],[/coverage/i,"Report of areas already served by the piped water network."],[/share/i,"The calculation of NWC’s revenue share under the signed agreement."],[/policy/i,"The approved NWC policy document the control checks against."],[/wallet/i,"Prepaid wallet statement of each wastewater tanker, showing entry fee deductions."],[/stock/i,"Stock count report kept by the Zamzam team: opening, closing and bottles sold."],[/Mobility/i,"Mobile app field readers use to capture manual meter readings."],[/WPS/i,"Water production system: volumes of water produced and supplied to NWC."],[/ELM/i,"Platform recording wastewater tanker entries at dumping stations and tanker wallets."],[/LIMS/i,"Laboratory system holding water test orders, results and invoices."],[/TMS/i,"Tanker management system: registered tankers, requests and deliveries."],[/SADAD|Etimad|gateway/i,"Payment channels: bills are uploaded here and customers pay through them."],[/\bGL\b/,"General ledger: where revenue is finally recorded by account."],[/ERP/,"Finance system: invoices, receipts, receivables ageing and the ledger."],[/WFM/,"Workforce management: field activities and work orders such as installation and disconnection."],[/MDM/,"Meter data management: validated consumption and meter alarms before billing."],[/AMR/,"Automatic meter reading: readings and status collected from meters in the field."],[/C2M/,"NWC’s customer and billing system: customers, meters, service agreements, quotations, bills, payments and balances."],[/charging/i,"Charges applied during the water connection process."],[/dump|billing/i,"Export of bills generated, used to test completeness and accuracy."],[/invoice/i,"Invoices raised to customers or contractors."]];
+function gs(t){for(var i=0;i<GS.length;i++)if(GS[i][0].test(t))return GS[i][1];return"Supporting report used by the control."}
+function nf(n){return(+n).toLocaleString("en-US",{maximumFractionDigits:2})}
+function theatre(id){var e=EX[id];if(!e)return"";var p=e.split("|"),rows=p[0].split(";").map(function(r){return r.split("=")}),h="";
+rows.forEach(function(r,i){var st=r[2]||"n";h+='<div class="r '+st+'" style="animation-delay:'+(i*.9)+'s"><span>'+r[0]+'</span><b>'+r[1]+'</b><i>'+(st==="b"?"✕":st==="o"?"✓":"")+'</i></div>'});
+var t=rows.length*.9;
+if(p[1]){var q=p[1].split(","),mx=Math.max(+q[0],+q[1]);h+='<div class="cmp" style="animation-delay:'+t+'s"><div><em>'+q[3]+'</em><u style="--w:'+(q[0]/mx*100)+'%;animation-delay:'+(t+.2)+'s"></u><b>'+nf(q[0])+' '+q[2]+'</b></div><div><em>'+q[4]+'</em><u class="b" style="--w:'+(q[1]/mx*100)+'%;animation-delay:'+(t+.6)+'s"></u><b>'+nf(q[1])+' '+q[2]+'</b></div><p class="gp">Gap: '+nf(Math.abs(q[0]-q[1]))+' '+q[2]+'</p></div>';t+=1.6}
+return h+'<div class="stamp" style="animation-delay:'+(t+.3)+'s">Flagged</div>'}
+var thT=null;function playTh(id){clearInterval(thT);var e=EX[id]||"",n=e.split("|")[0].split(";").length,d=(n*.9+(e.indexOf("|")>0?1.6:0)+4.5)*1000;function r(){$("#th").innerHTML=theatre(id)}r();thT=setInterval(r,d)}
+function srcList(a){return a.map(function(t){return'<div class="src"><i>⛁</i><div><b>'+t+'</b><span>'+gs(t)+'</span></div></div>'}).join("")}
+var IPM={CM:"Connection management",BI:"Billing and invoicing",RM:"Receivable management",OM:"Order management",FA:"Finance and accounting",PM:"Partner management",OP:"Operations management",CA:"Complaints and adjustments"};
+var RK=("R.1.01|Customers who have previous outstanding granted new connection|H|C.01|C|CM|Request for new connection|Dues are ignored, so new service goes to customers who still owe NWC.\n"+
+"R.1.02|Incorrect segmentation of customers|H|C.02|C|CM|Customer segmentation|Missing or wrong documents lead to the wrong customer class and wrong charges.\n"+
+"R.1.03|Delay in notifying customer for new connections|H|C.03|C|CM|New connection case creation|Late notice breaches regulator and NWC timelines and delays activation.\n"+
+"R.1.04|New connection rejected despite network coverage|H|C.03|C|CM|Feasibility assessment|Wrongly rejected requests lose connection and consumption revenue.\n"+
+"R.1.05|New connection quotation not generated|H|C.05|C|BI|Quotation generation|No quotation means no payment and no service.\n"+
+"R.1.06|New connection quotation incorrectly generated|H|C.05|C|BI|Quotation generation|Wrong rates cause wrong payment and revenue loss.\n"+
+"R.1.07|Failure to pay for new connection|H|C.06|C|RM|New connection payment|Unpaid quotations delay activation and lose revenue.\n"+
+"R.1.08|Mismatch between implementation WO and connection payment for new connection|H|C.07|C|OM|Implementation work order generation|Work without payment loses revenue; payment without work delays billing.\n"+
+"R.1.09|Failure or delay in closing implementation WO|H|C.07|C|OM|New connection establishment|Late closure breaches the SLA and delays billing.\n"+
+"R.1.10|New connection agreement not activated|H|C.08|C|OM|New connection establishment|A closed work order with no active agreement means consumption is not billed.\n"+
+"R.1.11|Negative margins due to contractor payout in case of new connection|H|C.09|C|PM|Contractor management|Contractor cost is higher than the fee collected.\n"+
+"R.1.12|Incorrect revenue recorded for new connection|H|C.10|C|FA|Connection revenue recording|GL revenue is over or under reported.\n"+
+"R.1.13|Failure to disconnect normal/salt water connection in case of non payment for waste water connection|M|C.11|C|CM|Wastewater connection establishment|Both services are required, yet water keeps flowing without payment.\n"+
+"R.6.01|Meters in AMR but missing in C2M|H|C.12|C|OP|Meter reading|Readings cannot reach C2M and the meter may be used illegally.\n"+
+"R.6.02|Reading not captured in AMR for normal/salt water consumption from active meters|H|C.13|C|OP|Meter reading|Missing reads cause incorrect billing.\n"+
+"R.6.03|Normal/salt water consumption reading captured from inactive meters|H|C.13|C|OP|Meter reading|Unauthorised use may go unbilled.\n"+
+"R.6.05|Normal/salt water consumption mismatch between AMR and MDM|H|C.13|C|OP|Meter reading|Customers are over or under charged.\n"+
+"R.6.04|Reading not captured in mobility for normal/salt water consumption|H|C.14|C|OP|Meter reading|Manual reads are missed, so billing is wrong.\n"+
+"R.6.06|Consumption mismatch for bulk meters between AMR and MDM|H|C.15|C|OP|Meter reading|Billable bulk meters are not billed.\n"+
+"R.6.07|Zero consumption for normal/salt water|H|C.16|C|OP|Meter reading|Zero reads lead to zero billing.\n"+
+"R.6.08|Low consumption for normal/salt water|H|C.17|C|OP|Meter reading|Under-reading meters cause incorrect billing.\n"+
+"R.6.09|Meter alarms not investigated|H|C.18|C|OP|Meter alarms|Defective meters stop sending correct and timely readings.\n"+
+"R.6.10|Block bills not cleared|H|C.19|C|BI|Block bill|Bills cannot be issued, so revenue is delayed.\n"+
+"R.6.11|Inaccurate clearance of block bills|H|C.19|C|BI|Block bill|Wrong adjustments produce inaccurate bills.\n"+
+"R.6.12|Consumption mismatch for AMR and C2M|H|C.13|C|BI|Billing|Customers are over or under charged.\n"+
+"R.6.13|Reading and billing cycle not assigned|H|C.20|C|BI|Billing|Accounts are read or billed incorrectly.\n"+
+"R.6.14|Failure to bill customers|H|C.21|C|BI|Billing|Active agreements are not invoiced.\n"+
+"R.6.15|Zero amount bill generated|H|C.21|C|BI|Billing|Bills show zero despite actual consumption.\n"+
+"R.6.16|Fixed fee not charged|H|C.22|C|BI|Billing|Monthly meter fees are lost.\n"+
+"R.6.17|Incorrect charging rate applied for consumption|H|C.22|C|BI|Billing|The wrong tariff slab is charged.\n"+
+"R.6.18|New meters installed for fixed consumption customers are being charged with fixed consumption rate|M|C.22|C|BI|Billing|Customers keep paying the fixed amount instead of actual use.\n"+
+"R.6.19|Incorrect bill uploaded on SADAD|H|C.23|C|BI|Billing|Customers pay the wrong or an incomplete amount.\n"+
+"R.6.20|Failure to notify high usage normal/salt water consumption|H|C.24|C|CA|Consumption high usage|Unnotified high bills lead to more adjustments.\n"+
+"R.6.21|Estimation bill despite of actual consumption (for normal/salt water)|H|C.25|C|BI|Estimated billing|Estimates breach the regulation and mislead customers.\n"+
+"R.6.22|Failure to notify the customer for bill|H|C.26|C|BI|Bill delivery|Undelivered bills cause non-payment and adjustments.\n"+
+"R.6.23|Incorrect payment posting|H|C.27|C|RM|Bill payment|SADAD payments do not match the billing system.\n"+
+"R.6.24|Inaccurate adjustment calculation|H|C.28|C|CA|Adjustment calculation|Wrong adjustments cause revenue loss.\n"+
+"R.6.25|Unapproved adjustments|H|C.28|C|CA|Adjustment posting|Adjustments are posted without authority-matrix approval.\n"+
+"R.6.26|Incorrect final invoice issue to customers|H|C.29|C|BI|Final invoice|Unbilled usage and dues are missed at disconnection.\n"+
+"R.6.27|Incorrect revenue recorded for normal/salt/waste water consumption|H|C.10|C|FA|Revenue recording|GL revenue is over or under reported.\n"+
+"R.7.01|Meter re-connected without clearing outstanding and reconnection fee|M|C.30|C|CM|Connection disconnection|Unauthorised use and growing outstanding.\n"+
+"R.7.02|Incorrect odometer revenue recorded|M|C.10|C|FA|Odometer revenue recording|Reconnection fee revenue is misreported.\n"+
+"R.7.03|Non-compliance to payment instalment policy|M|C.31|C|RM|Payment instalment|Wrong instalments delay payment.\n"+
+"R.7.04|Failure to disconnect customers for non-payment|M|C.32|C|RM|Dunning|Outstanding keeps growing.\n"+
+"R.7.05|Payment not received from customers|M|C.33|C|RM|Collection monitoring|Outstanding increases.\n"+
+"R.3.01|Water tanker request processed despite of water coverage|H|C.35|C|OM|Water tanker request|Lost connection and network consumption revenue.\n"+
+"R.3.02|Customers who have previous outstanding granted water tanker service|H|C.35|C|OM|Water tanker request|Policy forbids service to customers with unpaid bills.\n"+
+"R.3.03|Inaccurate / no reading captured for water tanker service|H|C.37|C|OP|Tanker station meter reading|Contractors are charged wrongly or not at all.\n"+
+"R.3.04|Incorrect charges applied for water tanker service|H|C.37|C|BI|Tanker station invoicing|Station contractors get wrong invoices.\n"+
+"R.3.05|No invoice generated for water tanker service|H|C.37|C|BI|Tanker station invoicing|Water supplied is never billed.\n"+
+"R.3.06|Incorrect revenue recorded for water tanker sales|H|C.10|C|FA|Tanker sales revenue recording|GL revenue is over or under reported.\n"+
+"R.3.07|Payment not received from water tanker contractors|H|C.36|C|RM|Collection|Tanker outstanding grows.\n"+
+"R.14.01|Water tanker quality testing not charged|L|C.38|N|BI|Water quality testing|The yearly test fee is lost.\n"+
+"R.14.02|Water tanker registration fee not or incorrectly charged|L|C.39|N|BI|Water tanker registration|The yearly SAR 200 fee is lost.\n"+
+"R.14.03|Incorrect water tanker registration fee recorded|L|C.39|N|FA|Registration revenue recording|Reported revenue is inaccurate.\n"+
+"R.4.01|Dumping station entry fee not charged or incorrectly charged|M|C.40|C|BI|Wastewater tanker entrance fees|Wallet deductions are missed.\n"+
+"R.4.02|Incorrect revenue share calculation and revenue recording|M|C.41|C|PM|Entry fee revenue share|NWC’s share from ELM is wrong.\n"+
+"R.4.03|Waste water tanker recharges not received from ELM|M|C.36|C|RM|Collection|Outstanding from ELM grows.\n"+
+"R.15.01|Waste water tanker registration fee not or incorrectly charged|L|C.42|N|BI|Wastewater tanker registration|The yearly SAR 200 fee is lost.\n"+
+"R.15.02|Incorrect waste water tanker registration revenue share|L|C.42|N|PM|Registration revenue share|NWC’s share is wrong.\n"+
+"R.15.03|Incorrect waste water tanker registration fee recorded|L|C.42|N|FA|Registration revenue recording|Reported revenue is inaccurate.\n"+
+"R.5.01|Water sample testing not charged|M|C.44|N|OM|Water sample testing request|Wrong prices cause invoice errors and revenue loss.\n"+
+"R.5.02|Water sample testing performed without payment|M|C.45|N|RM|Water sample testing payment|Tests are done but never paid for.\n"+
+"R.5.03|Incorrect revenue recorded for water sample testing|M|C.46|N|FA|Water sample testing revenue recording|GL revenue is over or under reported.\n"+
+"R.16.01|Incorrect revenue recorded in GL for contractor fines|M|C.49|N|FA|Contractor fines revenue recording|Penalty revenue is misreported.\n"+
+"R.12.03|Payment not received for O&M services|L|C.36|N|RM|Collection|Outstanding grows.\n"+
+"R.11.03|Payment not received for project services|L|C.36|N|RM|Collection|Outstanding grows.\n"+
+"R.10.03|Payment not received for rental services|L|C.36|N|RM|Collection|Outstanding from lessees grows.\n"+
+"R.9.01|Incorrect Zamzam invoices and revenue share calculation|L|C.54|N|PM|Zamzam revenue share and invoicing|Invoices or NWC’s share are wrong.\n"+
+"R.9.02|Incorrect Zamzam revenue recording|L|C.54|N|FA|Zamzam revenue recording|Reported revenue is inaccurate.\n"+
+"R.17.01|Inadequate NRW monitoring|M|C.55|C|BI|Billing|Non-billed volume keeps growing.").split("\n").map(function(l){var a=l.split("|");return{id:a[0],n:a[1],v:a[2],c:a[3],t:a[4],ip:a[5],p:a[6],i:a[7]}});
+var CN={"C.02":"Article 3.6: a new connection must not be given without valid legal deeds or documents that prove the customer’s right to the property.",
+"C.03":"The regulator (Chapter 3, Article 1.1) requires NWC to finalise new connection requests within 10 days, and NWC policy is 5 working days. One reviewer asked to change the period to 25 days. Confirm which timeline applies before relying on the control.",
+"C.05":"The fee logic is effective from 4 April 2026, and building area is rounded before the fee is calculated.",
+"C.06":"The control uses a 90-day payment period, but Appendix 5 of the updated regulatory guide reduces it to 10 days. The control and risk text need revising.",
+"C.07":"Article 3.1.2: NWC must provide the connection within 25 days of payment, while NWC policy says 15 days. The reviewer asked to change the SLA to 25 days.",
+"C.19":"The latest matrix lists this control as Monthly. An earlier extract said Daily.",
+"C.24":"Risk and control were updated: the alert threshold is 150% of the customer’s six-month average.",
+"C.25":"The updated regulatory guide allows estimated bills up to two times within a six-month period.",
+"C.29":"The latest matrix lists this control as Monthly. An earlier extract said Quarterly."};
+var RN={"R.4.01":"The risk text says SAR 15.25 or 23.26, but control C.40 checks SAR 15.25 and SAR 26 by cluster. Confirm the correct second fee.","R.9.01":"The risk text says NWC keeps SAR 1 per bottle, but control C.54 recalculates SAR 0.01 per bottle. Confirm the correct share.","R.1.07":"The risk text says 90 days, while the updated guide says 10 days.","R.1.09":"The risk text mentions 15 days (NWC policy) and 25 days (regulator). Article 3.1.2 sets 25 days from payment."};
+var SEV={H:"High",M:"Medium",L:"Low"},RKm={};RK.forEach(function(r){RKm[r.id]=r});
+function rkSvg(r){var a=IPM[r.ip],h="";function wr(x){var w=x.split(" "),l=["",""],i=0;w.forEach(function(q){if(i<1&&(l[0]+" "+q).trim().length>27)i=1;l[i]=(l[i]+" "+q).trim()});return l[1]?l:[l[0]]}
+[[10,a,"#0b4a66","#35d0e3"],[250,r.p,"#0b4a66","#35d0e3"],[490,"Risk leaks here","#3a1218","#ff6b63"]].forEach(function(n,i){var L=wr(n[1]);h+='<rect x="'+n[0]+'" y="12" width="200" height="56" rx="12" fill="'+n[2]+'" stroke="'+n[3]+'" stroke-width="2"'+(i===2?' class="blink"':"")+'/>'+L.map(function(t,k){return'<text x="'+(n[0]+100)+'" y="'+(L.length>1?36+k*16:44)+'" text-anchor="middle" font-size="13" fill="#fff" font-family="Sora,sans-serif">'+t+'</text>'}).join("")});
+[[210,250],[450,490]].forEach(function(l,j){h+='<path d="M'+l[0]+' 40H'+l[1]+'" stroke="#27566d" stroke-width="2"/>';for(var k=0;k<2;k++)h+='<circle r="4" fill="'+(j?"#ff6b63":"#7fe3f2")+'"><animateMotion dur="1.2s" begin="'+k*.6+'s" repeatCount="indefinite" path="M'+l[0]+' 40H'+l[1]+'"/></circle>'});
+return h+'<circle cx="590" cy="66" r="4" fill="#ff6b63"><animate attributeName="cy" values="64;80" dur="1s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="1s" repeatCount="indefinite"/></circle>'}
+function gaz(v){var n={H:3,M:2,L:1}[v];return[1,2,3].map(function(i){return'<i class="'+(i<=n?"on":"")+'"></i>'}).join("")+'<span class="sans" style="margin-left:8px;font-size:.8rem">'+SEV[v]+' severity</span>'}
+/* grid + filters */
+var st="all",fr="all",grid=$("#grid"),cur=0,view=[],mv=[];function chips(a){return a.map(function(x){return"<span>"+x.trim()+"</span>"}).join("")}
+function cardSvg(c){return '<svg viewBox="250 30 400 230" aria-hidden="true">'+BG+SC[c.id]()+'</svg>'}
+function render(){view=D.filter(function(c){return(st==="all"||c.c===st)&&(fr==="all"||c.f===fr)});
+grid.innerHTML=view.map(function(c,i){return '<button class="c" data-i="'+i+'" data-cat="'+c.c+'" style="--d:'+Math.min(i*30,600)+'ms">'+cardSvg(c)+'<div><b>'+c.id+'</b><span class="pill '+c.f+'">'+c.f+'</span><h3>'+c.n+'</h3><small>'+c.o+'</small></div></button>'}).join("");
+$("#cnt").textContent=view.length+" of "+D.length+" controls"}
+var rib=$("#rib");[["all","▦","All controls"]].concat(Object.keys(CATS).map(function(k){return[k,CATS[k][0],CATS[k][1]]})).forEach(function(x){var n=x[0]==="all"?D.length:D.filter(function(c){return c.c===x[0]}).length;var b=document.createElement("button");b.dataset.k=x[0];b.setAttribute("aria-pressed",x[0]==="all");b.innerHTML="<span>"+x[1]+"</span>"+x[2]+"<em>"+n+" controls</em>";b.onclick=function(){st=x[0];rib.querySelectorAll("button").forEach(function(o){o.setAttribute("aria-pressed",o===b)});render();$("#fq").scrollIntoView()};rib.appendChild(b)});
+// ribbon holds 6 buttons; adjust columns
+
+var fq=$("#fq");["all","Daily","Weekly","Monthly","Quarterly"].forEach(function(f){var b=document.createElement("button");b.textContent=f==="all"?"Any frequency":f;b.setAttribute("aria-pressed",f==="all");b.onclick=function(){fr=f;fq.querySelectorAll("button").forEach(function(o){o.setAttribute("aria-pressed",o===b)});render()};fq.appendChild(b)});
+var sp=document.createElement("span");sp.id="cnt";fq.appendChild(sp);
+grid.addEventListener("click",function(e){var b=e.target.closest(".c");if(b){mv=view.slice();openM(+b.dataset.i)}});
+
+/* modal */
+var md=$("#md"),lf=null;
+function setM(i){cur=(i+mv.length)%mv.length;var c=mv[cur];$("#stg").textContent=CATS[c.c][1]+" · runs "+c.f.toLowerCase();$("#msv").innerHTML=frame(c);$("#mh").textContent=c.id+" · "+c.n;$("#mc").textContent=c.k;$("#mf").textContent=c.f;$("#mo").innerHTML=chips(c.o.split(/;|,/));$("#ms").innerHTML=srcList(c.s);playTh(c.id);$("#rkp").hidden=true;var cn=$("#cn");cn.hidden=!CN[c.id];cn.textContent=CN[c.id]||"";$("#mr").innerHTML=RK.filter(function(r){return r.c===c.id}).map(function(r){return"<button data-r=\""+r.id+"\">"+r.id+"</button>"}).join("");$("#sl").innerHTML=stepsOf(c.id).map(function(t){return"<li>"+t+"</li>"}).join("");$("#ex").textContent=X[c.id]?X[c.id][1]:"";hl=0;tickHl()}
+var hl=0,hlT=null;function tickHl(){clearTimeout(hlT);var li=document.querySelectorAll("#sl li");if(!li.length)return;var cp=$("#cap"),pg=$("#pg");if(matchMedia("(prefers-reduced-motion:reduce)").matches){li.forEach(function(l){l.classList.add("on")});if(pg)pg.style.width="100%";return}li.forEach(function(l,i){l.classList.toggle("on",i===hl)});var t=li[hl].textContent;if(cp)cp.textContent="Step "+(hl+1)+": "+(t.length>86?t.slice(0,85)+"…":t);if(pg)pg.style.width=((hl+1)/li.length*100)+"%";hl=(hl+1)%li.length;hlT=setTimeout(tickHl,1800)}
+function openM(i){lf=document.activeElement;setM(i);md.classList.add("open");md.setAttribute("aria-hidden","false");$("#mx").focus()}
+function closeM(){clearTimeout(hlT);clearInterval(thT);md.classList.remove("open");md.setAttribute("aria-hidden","true");if(lf)lf.focus()}
+$("#mx").onclick=closeM;md.addEventListener("click",function(e){if(e.target===md)closeM()});$("#mp").onclick=function(){setM(cur-1)};$("#mn").onclick=function(){setM(cur+1)};
+addEventListener("keydown",function(e){if(!md.classList.contains("open"))return;if(e.key==="Escape")closeM();if(e.key==="ArrowRight")setM(cur+1);if(e.key==="ArrowLeft")setM(cur-1)});
+function showRisk(r){var P=$("#rkp");P.className=r.v;P.hidden=false;$("#rkid").textContent=r.id+" · "+(r.t==="C"?"Core":"Non-core");$("#gz").innerHTML=gaz(r.v);$("#rkn").textContent=r.n;$("#rkv").innerHTML=rkSvg(r);$("#rki").textContent=r.i;var w=$("#rkw");w.hidden=!RN[r.id];w.textContent=RN[r.id]||""}
+function openRisk(id){var r=RKm[id];mv=D.slice();openM(D.findIndex(function(c){return c.id===r.c}));showRisk(r)}
+$("#mr").addEventListener("click",function(e){var b=e.target.closest("button");if(b)showRisk(RKm[b.dataset.r])});
+var rs="all",rt="all",rg=$("#rg");
+function renderR(){var l=RK.filter(function(r){return(rs==="all"||r.v===rs)&&(rt==="all"||r.t===rt)});$("#rcnt").textContent=l.length+" of "+RK.length+" risks";rg.innerHTML=l.map(function(r,i){return'<button class="rc '+r.v+'" data-id="'+r.id+'" style="--d:'+Math.min(i*25,500)+'ms"><i class="drip"></i><b>'+r.id+' · '+SEV[r.v]+'</b><h3>'+r.n+'</h3><p>'+r.i+'</p><small>Caught by '+r.c+'</small></button>'}).join("")}
+[["sev","all","Any severity"],["sev","H","High"],["sev","M","Medium"],["sev","L","Low"],["typ","all","Core and non-core"],["typ","C","Core"],["typ","N","Non-core"]].forEach(function(x){var b=document.createElement("button");b.textContent=x[2];b.setAttribute("aria-pressed",x[1]==="all");b.dataset.g=x[0];b.onclick=function(){if(x[0]==="sev")rs=x[1];else rt=x[1];$("#rf").querySelectorAll('button[data-g="'+x[0]+'"]').forEach(function(o){o.setAttribute("aria-pressed",o===b)});renderR()};$("#rf").appendChild(b)});
+var rc=document.createElement("span");rc.id="rcnt";$("#rf").appendChild(rc);rg.addEventListener("click",function(e){var b=e.target.closest(".rc");if(b)openRisk(b.dataset.id)});renderR();
+render();
+function openId(id){mv=D.slice();openM(D.findIndex(function(c){return c.id===id}))}
+var FQ=[["Daily","every day",2.2],["Weekly","every week",4.5],["Monthly","every month",8],["Quarterly","every quarter",12]];
+$("#lanes").innerHTML=FQ.map(function(f){var l=D.filter(function(c){return c.f===f[0]});return'<div class="ln"><div class="lh"><b>'+f[0]+'</b><span>'+l.length+' controls · '+f[1]+'</span></div><div class="trk"><i style="animation-duration:'+f[2]+'s"></i></div><div class="chs">'+l.map(function(c){return'<button data-id="'+c.id+'" title="'+c.n+'">'+c.id+'</button>'}).join("")+'</div></div>'}).join("");
+$("#lanes").addEventListener("click",function(e){var b=e.target.closest("button");if(b)openId(b.dataset.id)});
+$("#hs").innerHTML=FQ.map(function(f){return'<div><strong data-n="'+D.filter(function(c){return c.f===f[0]}).length+'">0</strong>'+f[0]+' controls</div>'}).join("");
+$("#hs").insertAdjacentHTML("afterbegin",'<div><strong data-n="'+RK.length+'">0</strong>risks</div>');document.querySelectorAll("#hs strong").forEach(function(el){var n=+el.dataset.n,t0=null;function f(t){if(!t0)t0=t;var k=Math.min((t-t0)/1200,1);el.textContent=Math.round(n*k);if(k<1)requestAnimationFrame(f)}if(matchMedia("(prefers-reduced-motion:reduce)").matches)el.textContent=n;else requestAnimationFrame(f)});
+var ti=0,tkt=$("#tkt");function tk(){var c=D[ti%D.length];tkt.className="";void tkt.offsetWidth;tkt.className="in";tkt.textContent=c.id+" flagged “"+c.e+"” and sent it to "+c.o.split(/;|,/)[0].trim();ti+=7;ti%=D.length*5;}tk();if(!matchMedia("(prefers-reduced-motion:reduce)").matches)setInterval(tk,2800);
+</script>
+</body>
+</html>
